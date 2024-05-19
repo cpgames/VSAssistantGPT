@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="cpGames.VSA.Wpf.ToolEntryControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:cpGames.VSA.Wpf"
+             xmlns:vsa="clr-namespace:cpGames.VSA"
+             mc:Ignorable="d" 
+             d:DesignHeight="50" d:DesignWidth="200"
+             Name="MyToolControl">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/VSA;component/Generic.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <vsa:ToolCategoryToColorConverter x:Key="ToolCategoryToColorConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Border BorderBrush="White" BorderThickness="1" Margin="1" 
+            Background="{Binding Path=Category, Converter={StaticResource ToolCategoryToColorConverter}}" >
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Label Content="{Binding  Path=Name, FallbackValue='Tool Name' }" />
+        <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                Click="RemoveClicked">
+            <Button.Content>
+                <Image Source="pack://application:,,,/VSA;component/Resources/icons/x.png"
+                       Width="10" Height="10" />
+            </Button.Content>
+        </Button>
+    </StackPanel>
+    </Border>
+</UserControl>

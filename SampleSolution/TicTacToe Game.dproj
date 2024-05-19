@@ -1,0 +1,19 @@
+{
+  "name": "TicTacToe Game",
+  "description": "A Console app in C# that allows two players to play TicTacToe.\r\nPlayers take turns by entering row and column, until somebody wins\r\n",
+  "tasks": [
+    {
+      "name": "New Task",
+      "description": "Create programming tasks for programmer on your team to finish the entire project. Tasks should be ordered in order they can be be programmed.\r\n\r\nFinally create a task to run the game from the existing Program.cs file.\r\n\r\nBreak the project into smaller tasks.\r\n\r\nThe project enviroment is already set up, and project is created.\r\n\r\nWe do not need testing.",
+      "assignedBy": "Unassigned",
+      "assignedTo": "Developer",
+      "failureReason": "",
+      "order": 0,
+      "recurring": false,
+      "recurringInterval": 10.0,
+      "status": 0
+    }
+  ],
+  "team": "My Team 1",
+  "apiKey": "sk-proj-6xNM0sJGJIiBTWT3Ocw7T3BlbkFJZOWtaMpCEGuBnptTB1iT"
+}

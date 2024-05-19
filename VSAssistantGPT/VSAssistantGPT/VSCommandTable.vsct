@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <Extern href="stdidcmd.h" />
+    <Extern href="vsshlids.h" />
+    <Include href="KnownImageIds.vsct" />
+    <Include href="VSGlobals.vsct" />
+
+    <Commands package="VSAGuid">
+        <Groups>
+            <Group guid="VSAGuid" id="MyMenuGroup" priority="0x0600">
+                <Parent guid="VSMainMenu" id="Tools" />
+            </Group>
+        </Groups>
+
+        <Buttons>
+            <Button guid="VSAGuid" id="ShowVSACommand" priority="0x0100" type="Button">
+                <Parent guid="VSAGuid" id="MyMenuGroup" />
+                <Icon guid="GuidLogo" id="Logo" />
+                <Strings>
+                    <ButtonText>Show VSA</ButtonText>
+                    <LocCanonicalName>.Tools.VSAGuid</LocCanonicalName>
+                </Strings>
+            </Button>
+            <Button guid="VSAGuid" id="ShowHelperCommand" priority="0x0200" type="Button">
+                <Strings>
+                    <ButtonText>Show Helper</ButtonText>
+                </Strings>
+            </Button>
+        </Buttons>
+
+        <Bitmaps>
+            <Bitmap guid="GuidLogo" href="Resources\icons\Icon.png" usedList="Logo" />
+            <Bitmap guid="GuidPreview" href="Resources\icons\Preview.png" usedList="Preview" />
+        </Bitmaps>
+    </Commands>
+
+    <Symbols>
+        <GuidSymbol name="VSAGuid" value="{CB8CF9FB-11EB-4B63-ABA2-6133D16F82F0}">
+            <IDSymbol name="MyMenuGroup" value="0x1020" />
+            <IDSymbol name="ShowVSACommand" value="0x0100" />
+            <IDSymbol name="ShowHelperCommand" value="0x0200" />
+        </GuidSymbol>
+        <GuidSymbol name="GuidLogo" value="{4946C84E-C4C9-45DB-B1F7-EA362214B738}">
+            <IDSymbol name="Logo" value="1" />
+        </GuidSymbol>
+        <GuidSymbol name="GuidPreview" value="{786DC029-63FA-444A-8255-7F3ADE06BACF}">
+            <IDSymbol name="Preview" value="1" />
+        </GuidSymbol>
+    </Symbols>
+</CommandTable>
