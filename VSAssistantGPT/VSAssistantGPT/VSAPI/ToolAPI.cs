@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -220,6 +219,7 @@ namespace cpGames.VSA
         public static JObject SetSelection(Dictionary<string, dynamic> arguments)
         {
             DTEUtils.SetSelection(arguments["text"]);
+            DTEUtils.SaveFile();
             return new JObject
             {
                 ["result"] = "success"
@@ -247,21 +247,21 @@ namespace cpGames.VSA
 
         public static JObject SetFileText(Dictionary<string, dynamic> arguments)
         {
-            try
-            {
-                DTEUtils.SetActiveDocumentText(arguments["text"]);
-                return new JObject
-                {
-                    ["result"] = "success"
-                };
-            }
-            catch (Exception e)
+            var filename = arguments["filename"];
+            if (!DTEUtils.FileExists(filename))
             {
                 return new JObject
                 {
-                    ["result"] = e.Message
+                    ["result"] = "file not found"
                 };
             }
+            DTEUtils.OpenFile(filename);
+            DTEUtils.SetActiveDocumentText(arguments["text"]);
+            DTEUtils.SaveFile();
+            return new JObject
+            {
+                ["result"] = "success"
+            };
         }
 
         public static JObject OpenFile(Dictionary<string, dynamic> arguments)
@@ -289,6 +289,7 @@ namespace cpGames.VSA
             SetFileText(
                 new Dictionary<string, dynamic>
                 {
+                    ["filename"] = filename,
                     ["text"] = text
                 });
             DTEUtils.SaveFile();
@@ -318,15 +319,13 @@ namespace cpGames.VSA
             return result;
         }
 
-        public static JObject GetFiles(Dictionary<string, dynamic> arguments)
+        public static JObject ListFiles(Dictionary<string, dynamic> arguments)
         {
             var files = DTEUtils.GetProjectItemsInActiveProject();
             var filesArr = new JArray();
-            var projectPath = DTEUtils.GetProjectPath();
             foreach (var file in files)
             {
-                var filename = file.FileNames[0].Replace(projectPath, "");
-                DTEUtils.ValidateFileName(ref filename);
+                var filename = DTEUtils.GetRelativePath(file.FileNames[0]);
                 filesArr.Add(filename);
             }
             var result = new JObject
@@ -335,6 +334,11 @@ namespace cpGames.VSA
                 ["files"] = filesArr
             };
             return result;
+        }
+
+        public static JArray GetErrors(Dictionary<string, dynamic> arguments)
+        {
+            return DTEUtils.GetErrors();
         }
         #endregion
     }

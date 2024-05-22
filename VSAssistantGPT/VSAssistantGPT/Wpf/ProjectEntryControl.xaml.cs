@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using cpGames.VSA.ViewModel;
 using Newtonsoft.Json.Linq;
 
@@ -25,35 +27,42 @@ namespace cpGames.VSA.Wpf
         }
         #endregion
 
-        #region Events
-        private async void OnTabSelected(object sender, SelectionChangedEventArgs e)
+        #region Methods
+        private async void TabSelected(object sender, SelectionChangedEventArgs e)
         {
-            if (ViewModel == null)
+            if (ViewModel == null || string.IsNullOrEmpty(ViewModel.ApiKey))
             {
                 return;
+            }
+            // if tab 'Chat' is selected
+            if (e.Source is TabControl { SelectedIndex: 0 })
+            {
+                if (ViewModel.Assistants.Count == 0)
+                {
+                    await ViewModel.LoadAssistantsAsync();
+                }
+                var selectedAssistant = ViewModel.Assistants
+                    .FirstOrDefault(x => x.Name == ViewModel.SelectedAssistant);
+                if (selectedAssistant == null)
+                {
+                    selectedAssistant = ViewModel.Assistants.FirstOrDefault();
+                    ViewModel.SelectedAssistant = selectedAssistant?.Name ?? "";
+                }
+                ViewModel.Thread.Assistant = selectedAssistant;
             }
             // if tab 'Assistants' is selected
             if (e.Source is TabControl { SelectedIndex: 1 })
             {
-                await ViewModel.LoadAssistantsAsync();
+                if (ViewModel.Assistants.Count == 0)
+                {
+                    await ViewModel.LoadAssistantsAsync();
+                }
             }
             // if tab 'Tools' is selected
             else if (e.Source is TabControl { SelectedIndex: 2 })
             {
                 ViewModel.LoadToolset();
             }
-        }
-        #endregion
-
-        #region Methods
-        private void AddTaskClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel?.AddTask(new TaskModel());
-        }
-
-        private void StartProjectClick(object sender, RoutedEventArgs e)
-        {
-            //Processor.GetInstance().ExecuteAsync().ConfigureAwait(false);
         }
 
         private void ReloadClicked(object sender, RoutedEventArgs e)
@@ -80,9 +89,51 @@ namespace cpGames.VSA.Wpf
             Console.WriteLine($"Tool call response: {result}");
         }
 
-        private void SelectAssistantClicked(object sender, RoutedEventArgs e)
+        private async void SelectAssistantClicked(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (ViewModel == null || ProjectUtils.ActiveProject == null)
+            {
+                return;
+            }
+            var resourceDictionary = new ResourceDictionary
+            {
+                Source = new Uri("/VSA;component/generic.xaml", UriKind.RelativeOrAbsolute)
+            };
+            var menuTemplate = resourceDictionary["SimpleMenuTemplate"] as ControlTemplate;
+            if (menuTemplate == null)
+            {
+                return;
+            }
+            var itemTemplate = resourceDictionary["SimpleMenuItemTemplate"] as ControlTemplate;
+            if (itemTemplate == null)
+            {
+                return;
+            }
+            if (ProjectUtils.ActiveProject.Assistants.Count == 0)
+            {
+                await ProjectUtils.ActiveProject.LoadAssistantsAsync();
+            }
+            var contextMenu = new ContextMenu
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Template = menuTemplate
+            };
+            foreach (var assistant in ProjectUtils.ActiveProject.Assistants)
+            {
+                var menuItem = new MenuItem
+                {
+                    Header = assistant.Name,
+                    Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                    Template = itemTemplate
+                };
+                menuItem.Click += (s, a) =>
+                {
+                    ViewModel.SelectedAssistant = assistant.Name;
+                };
+                contextMenu.Items.Add(menuItem);
+            }
+            contextMenu.IsOpen = true;
         }
 
         private void AddAssistantClicked(object sender, RoutedEventArgs e)
@@ -148,7 +199,11 @@ namespace cpGames.VSA.Wpf
                     name = projectItem.Name,
                     path = projectItem.FileNames[0]
                 };
-                ViewModel.AddFile(fileModel);
+                var fileViewModel = ViewModel.AddFile(fileModel);
+                if (SelectAllCheckbox.IsChecked == true)
+                {
+                    fileViewModel.Selected = true;
+                }
             }
             await ViewModel.UploadFilesAsync();
         }
@@ -198,16 +253,6 @@ namespace cpGames.VSA.Wpf
             }
         }
 
-        private void SelectAllVectorStoresChecked(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SelectAllVectorStoresUnchecked(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private async void LoadVectorStoresClicked(object sender, RoutedEventArgs e)
         {
             if (ViewModel == null)
@@ -223,25 +268,21 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
-            if (ViewModel.Files.Count == 0)
+            if (ViewModel.VectorStores.Count == 0)
             {
                 await ViewModel.LoadVectorStoresAsync();
             }
         }
 
-        private void AddVectorStoreClicked(object sender, RoutedEventArgs e)
+        private async void AddVectorStoreClicked(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
-        }
-
-        private async void RefreshThreadClicked(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel == null || string.IsNullOrEmpty(ViewModel.Thread.Id))
+            if (ViewModel == null)
             {
                 return;
             }
-            await ViewModel.Thread.DeleteAsync();
-            await ViewModel.Thread.CreateAsync();
+            var vectorStore = new VectorStoreModel();
+            var vectorStoreViewModel = ViewModel.AddVectorStore(vectorStore);
+            await vectorStoreViewModel.CreateAsync();
         }
         #endregion
 
@@ -306,10 +347,9 @@ namespace cpGames.VSA.Wpf
 
         private void TestGetFilesClick(object sender, RoutedEventArgs e)
         {
-            var result = ToolAPI.GetFiles(new Dictionary<string, dynamic>());
+            var result = ToolAPI.ListFiles(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
-
 
         private void TestGetFileTextClick(object sender, RoutedEventArgs e)
         {
@@ -320,7 +360,22 @@ namespace cpGames.VSA.Wpf
             var result = ToolAPI.GetFileText(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
-        #endregion
 
+        private void TestSetFileTextClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "\\TestFolder\\TestFile.cs" },
+                { "text", "This is a modified test file" }
+            };
+            ToolAPI.SetFileText(arguments);
+        }
+
+        private void TestGetErrorsClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetErrors(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+        #endregion
     }
 }

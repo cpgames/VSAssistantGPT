@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using EnvDTE;
+using EnvDTE80;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json.Linq;
 
 namespace cpGames.VSA
 {
@@ -97,15 +99,21 @@ namespace cpGames.VSA
             return projectItems;
         }
 
+        public static string GetRelativePath(string path)
+        {
+            var relativePath = path.Replace(GetProjectPath(), "");
+            ValidateFileName(ref relativePath);
+            return relativePath;
+        }
+
         public static List<string> GetFilesInActiveProject()
         {
             var projectItems = GetProjectItemsInActiveProject();
             var files = new List<string>();
             foreach (var item in projectItems)
             {
-                var fileName = item.FileNames[0];
-                var relativeFileName = fileName.Replace(GetProjectPath(), "");
-                files.Add(relativeFileName);
+                var fileName = GetRelativePath(item.FileNames[0]);
+                files.Add(fileName);
             }
             return files;
         }
@@ -295,6 +303,31 @@ namespace cpGames.VSA
         {
             var dte = (DTE)ServiceProvider.GlobalProvider.GetService(typeof(DTE));
             return dte.Solution.IsOpen;
+        }
+
+        public static JArray GetErrors()
+        {
+            var errorArray = new JArray();
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            Assumes.Present(dte);
+            var errorList = dte.ToolWindows.ErrorList;
+
+            for (var i = 1; i <= errorList.ErrorItems.Count; i++)
+            {
+                var errorItem = errorList.ErrorItems.Item(i);
+                var errorObject = new JObject
+                {
+                    ["Description"] = errorItem.Description,
+                    ["ErrorLevel"] = errorItem.ErrorLevel.ToString(),
+                    ["File"] = GetRelativePath(errorItem.FileName),
+                    ["Line"] = errorItem.Line,
+                    ["Column"] = errorItem.Column
+                };
+
+                errorArray.Add(errorObject);
+            }
+
+            return errorArray;
         }
         #endregion
     }

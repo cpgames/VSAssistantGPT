@@ -11,6 +11,7 @@ namespace cpGames.VSA.ViewModel
     public class VectorStoreViewModel : ViewModel<VectorStoreModel>
     {
         #region Properties
+        public Action? CreateAction { get; set; }
         public Action? RemoveAction { get; set; }
         public string Id
         {
@@ -33,6 +34,18 @@ namespace cpGames.VSA.ViewModel
         #endregion
 
         #region Methods
+        public async Task CreateAsync()
+        {
+            if (ProjectUtils.ActiveProject == null)
+            {
+                throw new Exception("No active project.");
+            }
+            var request = new CreateVectorStoreRequest();
+            var response = await request.SendAsync();
+            Id = response.data["id"]!.ToString();
+            CreateAction?.Invoke();
+        }
+
         public async Task DeleteAsync()
         {
             if (string.IsNullOrEmpty(Id))
@@ -71,6 +84,10 @@ namespace cpGames.VSA.ViewModel
                     throw new Exception("File not found.");
                 }
                 Files.Add(fileViewModel);
+                fileViewModel.RemoveAction += () =>
+                {
+                    Files.Remove(fileViewModel);
+                };
             }
         }
 
@@ -94,22 +111,22 @@ namespace cpGames.VSA.ViewModel
             }
             var selectedFiles = ProjectUtils.ActiveProject.Files.Where(f => f.Selected).ToList();
             var filesToDelete = new List<FileViewModel>();
-            foreach (var file in Files)
+            foreach (var fileViewModel in Files)
             {
-                if (string.IsNullOrEmpty(file.Id))
+                if (string.IsNullOrEmpty(fileViewModel.Id))
                 {
                     continue;
                 }
-                if (!selectedFiles.Contains(file))
+                if (!selectedFiles.Contains(fileViewModel))
                 {
-                    filesToDelete.Add(file);
+                    filesToDelete.Add(fileViewModel);
                 }
             }
-            foreach (var file in filesToDelete)
+            foreach (var fileViewModel in filesToDelete)
             {
-                var deleteVectorStoreFileRequest = new DeleteVectorStoreFileRequest(Id, file.Id);
+                var deleteVectorStoreFileRequest = new DeleteVectorStoreFileRequest(Id, fileViewModel.Id);
                 await deleteVectorStoreFileRequest.SendAsync();
-                Files.Remove(file);
+                Files.Remove(fileViewModel);
             }
             selectedFiles.RemoveAll(f => Files.Contains(f));
             if (selectedFiles.Count == 0)
@@ -118,9 +135,13 @@ namespace cpGames.VSA.ViewModel
             }
             var createVectorStoreFileBatchRequest = new CreateVectorStoreFileBatchRequest(Id, selectedFiles.Select(f => f.Id).ToArray());
             await createVectorStoreFileBatchRequest.SendAsync();
-            foreach (var file in selectedFiles)
+            foreach (var fileViewModel in selectedFiles)
             {
-                Files.Add(file);
+                Files.Add(fileViewModel);
+                fileViewModel.RemoveAction += () =>
+                {
+                    Files.Remove(fileViewModel);
+                };
             }
         }
         #endregion

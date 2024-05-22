@@ -60,23 +60,21 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Commands\ShowHelperCommand.cs" />
-    <Compile Include="Glyph\TextViewConnectionListener.cs" />
-    <Compile Include="Glyph\VSATag.cs" />
-    <Compile Include="Glyph\VSATagger.cs" />
-    <Compile Include="Glyph\VSATaggerProvider.cs" />
-    <Compile Include="Glyph\VSAGlyphFactory.cs" />
-    <Compile Include="Glyph\VSAGlyphFactoryProvider.cs" />
+    <Compile Include="VSAPI\Glyph\TextViewConnectionListener.cs" />
+    <Compile Include="VSAPI\Glyph\VSATag.cs" />
+    <Compile Include="VSAPI\Glyph\VSATagger.cs" />
+    <Compile Include="VSAPI\Glyph\VSATaggerProvider.cs" />
+    <Compile Include="VSAPI\Glyph\VSAGlyphFactory.cs" />
+    <Compile Include="VSAPI\Glyph\VSAGlyphFactoryProvider.cs" />
     <Compile Include="Model\VectorStoreModel.cs" />
     <Compile Include="Model\FileModel.cs" />
     <Compile Include="Model\ProjectModel.cs" />
-    <Compile Include="Model\TaskModel.cs" />
     <Compile Include="Model\ToolEntryModel.cs" />
     <Compile Include="Model\ToolModel.cs" />
     <Compile Include="Model\MessageModel.cs" />
     <Compile Include="RestAPI\ListThreadsRequest.cs" />
     <Compile Include="RestAPI\ListMessagesRequest.cs" />
-    <Compile Include="ToolAPI.cs" />
+    <Compile Include="VSAPI\ToolAPI.cs" />
     <Compile Include="ViewModel\AssistantViewModel.cs" />
     <Compile Include="OptionsPage.cs">
       <SubType>Component</SubType>
@@ -123,7 +121,6 @@
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="ViewModel\MessageViewModel.cs" />
     <Compile Include="ViewModel\RunViewModel.cs" />
-    <Compile Include="ViewModel\TaskViewModel.cs" />
     <Compile Include="ViewModel\ProjectViewModel.cs" />
     <Compile Include="ViewModel\ThreadViewModel.cs" />
     <Compile Include="ViewModel\ViewModel.cs" />
@@ -219,6 +216,17 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\icons\Move.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Content Include="PropertyTools.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PropertyTools.Wpf.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\python\CreateFile.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -228,10 +236,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\python\GetErrors.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Resources\python\GetFiles.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -246,6 +250,10 @@
     <Content Include="Resources\python\HasSelection.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\python\ListFiles.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\python\SetFileText.py">
       <IncludeInVSIX>true</IncludeInVSIX>

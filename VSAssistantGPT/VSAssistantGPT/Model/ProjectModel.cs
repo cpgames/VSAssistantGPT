@@ -7,7 +7,6 @@ namespace cpGames.VSA
         #region Fields
         public string name = "New Project";
         public string description = "New Project Description";
-        public List<TaskModel> tasks = new();
         public string team = "";
         public string apiKey = "";
         public string selectedAssistant = "";

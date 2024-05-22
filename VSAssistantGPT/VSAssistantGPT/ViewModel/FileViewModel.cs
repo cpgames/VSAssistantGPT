@@ -114,8 +114,7 @@ namespace cpGames.VSA.ViewModel
             if (!Path.StartsWith(tmpDir))
             {
                 var content = File.ReadAllText(Path);
-                var projectFolderPath = DTEUtils.GetSolutionFolderPath();
-                var relativePath = Utils.GetRelativePath(Path, projectFolderPath);
+                var relativePath = DTEUtils.GetRelativePath(Path);
 
                 var fileObject = new JObject
                 {

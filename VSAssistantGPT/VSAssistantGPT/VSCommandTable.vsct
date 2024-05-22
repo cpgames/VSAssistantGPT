@@ -24,11 +24,6 @@
                     <LocCanonicalName>.Tools.VSAGuid</LocCanonicalName>
                 </Strings>
             </Button>
-            <Button guid="VSAGuid" id="ShowHelperCommand" priority="0x0200" type="Button">
-                <Strings>
-                    <ButtonText>Show Helper</ButtonText>
-                </Strings>
-            </Button>
         </Buttons>
 
         <Bitmaps>
@@ -41,7 +36,6 @@
         <GuidSymbol name="VSAGuid" value="{CB8CF9FB-11EB-4B63-ABA2-6133D16F82F0}">
             <IDSymbol name="MyMenuGroup" value="0x1020" />
             <IDSymbol name="ShowVSACommand" value="0x0100" />
-            <IDSymbol name="ShowHelperCommand" value="0x0200" />
         </GuidSymbol>
         <GuidSymbol name="GuidLogo" value="{4946C84E-C4C9-45DB-B1F7-EA362214B738}">
             <IDSymbol name="Logo" value="1" />

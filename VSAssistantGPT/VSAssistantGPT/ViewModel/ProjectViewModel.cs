@@ -9,9 +9,7 @@ namespace cpGames.VSA.ViewModel
     public class ProjectViewModel : ViewModel<ProjectModel>
     {
         #region Fields
-        private double _progress;
-        private string _vectorStoreId = "";
-        private string _vectorStoreLoaded = "Not Loaded";
+        private bool _working;
         #endregion
 
         #region Properties
@@ -63,6 +61,7 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.apiKey = value;
                     OnPropertyChanged();
+                    ProjectUtils.SaveProject();
                 }
             }
         }
@@ -75,51 +74,23 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.selectedAssistant = value;
                     OnPropertyChanged();
+                    ProjectUtils.SaveProject();
                 }
             }
         }
 
-        public double Progress
+        public bool Working
         {
-            get => _progress;
+            get => _working;
             set
             {
-                if (_progress != value)
+                if (_working != value)
                 {
-                    _progress = value;
+                    _working = value;
                     OnPropertyChanged();
                 }
             }
         }
-
-        public string VectorStoreId
-        {
-            get => _vectorStoreId;
-            set
-            {
-                if (_vectorStoreId != value)
-                {
-                    _vectorStoreId = value;
-                    OnPropertyChanged();
-                    VectorStoreLoaded = string.IsNullOrEmpty(_vectorStoreId) ? "Not Loaded" : "Loaded";
-                }
-            }
-        }
-
-        public string VectorStoreLoaded
-        {
-            get => _vectorStoreLoaded;
-            set
-            {
-                if (_vectorStoreLoaded != value)
-                {
-                    _vectorStoreLoaded = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public ObservableCollection<TaskViewModel> Tasks { get; } = new();
 
         public ThreadViewModel Thread { get; } = new(new ThreadModel());
 
@@ -133,34 +104,10 @@ namespace cpGames.VSA.ViewModel
         #endregion
 
         #region Constructors
-        public ProjectViewModel(ProjectModel projectModel) : base(projectModel)
-        {
-            foreach (var taskModel in _model.tasks)
-            {
-                var taskViewModel = new TaskViewModel(taskModel);
-                Tasks.Add(taskViewModel);
-                taskViewModel.RemoveAction += () =>
-                {
-                    _model.tasks.Remove(taskModel);
-                    Tasks.Remove(taskViewModel);
-                };
-            }
-        }
+        public ProjectViewModel(ProjectModel projectModel) : base(projectModel) { }
         #endregion
 
         #region Methods
-        public void AddTask(TaskModel task)
-        {
-            _model.tasks.Add(task);
-            var taskViewModel = new TaskViewModel(task);
-            Tasks.Add(taskViewModel);
-            taskViewModel.RemoveAction += () =>
-            {
-                _model.tasks.Remove(task);
-                Tasks.Remove(taskViewModel);
-            };
-        }
-
         public void AddAssistant(AssistantModel assistant)
         {
             _model.assistants.Add(assistant);
@@ -201,7 +148,7 @@ namespace cpGames.VSA.ViewModel
             return fileViewModel;
         }
 
-        public void AddVectorStore(VectorStoreModel vectorStore)
+        public VectorStoreViewModel AddVectorStore(VectorStoreModel vectorStore)
         {
             _model.vectorStores.Add(vectorStore);
             var vectorStoreViewModel = new VectorStoreViewModel(vectorStore);
@@ -211,13 +158,14 @@ namespace cpGames.VSA.ViewModel
                 _model.vectorStores.Remove(vectorStore);
                 VectorStores.Remove(vectorStoreViewModel);
             };
+            return vectorStoreViewModel;
         }
 
         public void Save()
         {
-            ProjectUtils.SaveProject(_model);
+            ProjectUtils.SaveProject();
         }
-        
+
         public async Task LoadAssistantsAsync()
         {
             if (Toolset.Count == 0)
@@ -278,7 +226,7 @@ namespace cpGames.VSA.ViewModel
                     description = tool["description"]!.ToString(),
                     category = tool["category"]!.ToString()
                 };
-                JArray arguments = tool["arguments"] as JArray;
+                var arguments = tool["arguments"] as JArray;
                 if (arguments != null)
                 {
                     foreach (var argument in arguments)
@@ -346,6 +294,14 @@ namespace cpGames.VSA.ViewModel
             {
                 var file = Files.First(f => f.Selected);
                 await file.DeleteAsync();
+            }
+        }
+
+        public async Task WaitForWorkingAsync()
+        {
+            while (Working)
+            {
+                await Task.Delay(100);
             }
         }
         #endregion

@@ -15,8 +15,6 @@
     {
         #region Fields
         public string id = "";
-        public string threadId = "";
-        public string assistantId = "";
         public RunStatus status = RunStatus.queued;
         #endregion
     }

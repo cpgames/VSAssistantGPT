@@ -28,7 +28,6 @@ namespace cpGames.VSA
     {
         public const int MyMenuGroup = 0x1020;
         public const int ShowVSACommand = 0x0100;
-        public const int ShowHelperCommand = 0x0200;
         public const int Logo = 0x0001;
         public const int Preview = 0x0001;
     }

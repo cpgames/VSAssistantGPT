@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Windows;
 using cpGames.VSA.RestAPI;
 using Newtonsoft.Json.Linq;
 
@@ -13,6 +14,7 @@ namespace cpGames.VSA.ViewModel
         private RunViewModel? _run;
         private AssistantViewModel? _assistant;
         private string _assistantName = "[None]";
+        private Visibility _isThinking = Visibility.Collapsed;
         #endregion
 
         #region Properties
@@ -65,6 +67,19 @@ namespace cpGames.VSA.ViewModel
                 if (_assistantName != value)
                 {
                     _assistantName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public Visibility IsThinking
+        {
+            get => _isThinking;
+            set
+            {
+                if (_isThinking != value)
+                {
+                    _isThinking = value;
                     OnPropertyChanged();
                 }
             }
@@ -149,12 +164,18 @@ namespace cpGames.VSA.ViewModel
             {
                 throw new Exception("Assistant has not been set");
             }
-            var run = new RunModel
+            var run = new RunModel();
+            Run = new RunViewModel(run)
             {
-                assistantId = Assistant.Id,
-                threadId = Id
+                Assistant = Assistant,
+                Thread = this
             };
-            Run = new RunViewModel(run);
+            Run.RunStarted += () => IsThinking = Visibility.Visible;
+            Run.RunEnded += () =>
+            {
+                IsThinking = Visibility.Collapsed;
+                Run = null;
+            };
             await Run.CreateAsync();
             await UpdateMessagesAsync();
         }

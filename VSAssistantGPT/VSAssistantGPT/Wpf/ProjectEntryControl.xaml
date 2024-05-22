@@ -12,22 +12,20 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/VSA;component/Generic.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <CollectionViewSource x:Key="GroupedTools" Source="{Binding Toolset, UpdateSourceTrigger=PropertyChanged}">
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="Category" />
+                </CollectionViewSource.GroupDescriptions>
+            </CollectionViewSource>
         </ResourceDictionary>
     </UserControl.Resources>
-    <TabControl SelectionChanged="OnTabSelected">
+    <TabControl SelectionChanged="TabSelected">
         <TabItem Header="Chat" Height="20" VerticalAlignment="Bottom">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="RefreshThreadClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
-                               Width="16" Height="16" Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
                 <wpf:ThreadControl Grid.Row="1" DataContext="{Binding Thread}" Margin="5" />
             </Grid>
         </TabItem>
@@ -50,7 +48,11 @@
             </StackPanel>
         </TabItem>
         <TabItem Header="Tools">
-            <StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
                 <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                         Click="AddToolClicked">
                     <Button.Content>
@@ -58,99 +60,121 @@
                                Width="10" Height="10" Margin="2,0,2,0" />
                     </Button.Content>
                 </Button>
-                <ItemsControl ItemsSource="{Binding Toolset, UpdateSourceTrigger=PropertyChanged}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type viewModel:ToolViewModel}">
-                            <wpf:ToolControl Margin="5" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Source={StaticResource GroupedTools}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate />
+                        </ItemsControl.ItemTemplate>
+
+                        <ItemsControl.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="{Binding Name}">
+                                            <ItemsControl ItemsSource="{Binding Items}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type viewModel:ToolViewModel}">
+                                                        <wpf:ToolControl Margin="5" />
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Expander>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ItemsControl.GroupStyle>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
         </TabItem>
         <TabItem Header="Resources">
-            <StackPanel>
-                <Expander Header="Files" IsExpanded="False" Expanded="FilesExpanded">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <CheckBox Grid.Column="0" Margin="5,0,5,0"
-                                      Checked="SelectAllFilesChecked" Unchecked="SelectAllFilesUnchecked" />
-                            <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                    Click="LoadFilesClicked">
-                                <Button.Content>
-                                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
-                                           Margin="2,0,2,0" />
-                                </Button.Content>
-                            </Button>
-                            <Button Grid.Column="3" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                    Click="SyncFilesClicked">
-                                <Button.Content>
-                                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/sync.png"
-                                           Margin="2,0,2,0" />
-                                </Button.Content>
-                            </Button>
-                            <Button Grid.Column="4" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                    Click="DeleteFilesClicked">
-                                <Button.Content>
-                                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                                           Margin="2,0,2,0" />
-                                </Button.Content>
-                            </Button>
-                        </Grid>
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Expander Header="Files" IsExpanded="False" Expanded="FilesExpanded">
                         <StackPanel>
-                            <ItemsControl ItemsSource="{Binding Files, UpdateSourceTrigger=PropertyChanged}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type viewModel:FileViewModel}">
-                                        <wpf:FileEntryControl />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="0" Name="SelectAllCheckbox" Margin="5,0,5,0"
+                                          Checked="SelectAllFilesChecked" Unchecked="SelectAllFilesUnchecked" />
+                                <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                        Click="LoadFilesClicked">
+                                    <Button.Content>
+                                        <Image
+                                            Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
+                                            Margin="2,0,2,0" />
+                                    </Button.Content>
+                                </Button>
+                                <Button Grid.Column="3" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                        Click="SyncFilesClicked">
+                                    <Button.Content>
+                                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/sync.png"
+                                               Margin="2,0,2,0" />
+                                    </Button.Content>
+                                </Button>
+                                <Button Grid.Column="4" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                        Click="DeleteFilesClicked">
+                                    <Button.Content>
+                                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
+                                               Margin="2,0,2,0" />
+                                    </Button.Content>
+                                </Button>
+                            </Grid>
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding Files, UpdateSourceTrigger=PropertyChanged}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type viewModel:FileViewModel}">
+                                            <wpf:FileEntryControl />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Expander>
-                <Expander Header="File Stores" IsExpanded="False" Expanded="VectorStoresExpanded">
-                    <StackPanel>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Button Grid.Column="1" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                    Click="LoadVectorStoresClicked">
-                                <Button.Content>
-                                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
-                                           Margin="2,0,2,0" />
-                                </Button.Content>
-                            </Button>
-                            <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                    Click="AddVectorStoreClicked">
-                                <Button.Content>
-                                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
-                                           Margin="2,0,2,0" />
-                                </Button.Content>
-                            </Button>
-                        </Grid>
+                    </Expander>
+                    <Expander Header="File Stores" IsExpanded="False" Expanded="VectorStoresExpanded">
                         <StackPanel>
-                            <ItemsControl ItemsSource="{Binding VectorStores, UpdateSourceTrigger=PropertyChanged}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type viewModel:VectorStoreViewModel}">
-                                        <wpf:VectorStoreControl />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="1" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                        Click="LoadVectorStoresClicked">
+                                    <Button.Content>
+                                        <Image
+                                            Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
+                                            Margin="2,0,2,0" />
+                                    </Button.Content>
+                                </Button>
+                                <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                                        Click="AddVectorStoreClicked">
+                                    <Button.Content>
+                                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
+                                               Margin="2,0,2,0" />
+                                    </Button.Content>
+                                </Button>
+                            </Grid>
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding VectorStores, UpdateSourceTrigger=PropertyChanged}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type viewModel:VectorStoreViewModel}">
+                                            <wpf:VectorStoreControl />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Expander>
-            </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
         </TabItem>
         <TabItem Header="Settings">
             <StackPanel>
@@ -164,41 +188,27 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             Text="{Binding Team, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Label Grid.Column="0"
+                           Content="{Binding SelectedAssistant, UpdateSourceTrigger=PropertyChanged, FallbackValue='None'}" />
                     <Button Grid.Column="1" Content="..." Foreground="White"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                             Click="SelectAssistantClicked" Height="20" />
-                </Grid>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                            ToolTip="Edit team" Click="ReloadClicked" VerticalAlignment="Bottom">
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/Refresh.png" />
-                    </Button>
-                    <ProgressBar Grid.Column="1" Name="ProgressBar"
-                                 Value="{Binding Progress, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="20" />
-                    <Label Grid.Column="2"
-                           Content="{Binding VectorStoreLoaded, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </StackPanel>
         </TabItem>
         <TabItem Header="Testing">
             <StackPanel>
-                <Button Content="Open File" Click="TestOpenFileClick"/>
-                <Button Content="Create File" Click="TestCreateFileClick"/>
-                <Button Content="Delete File" Click="TestDeleteFileClick"/>
-                <Button Content="Has File" Click="TestHasFileClick"/>
-                <Button Content="Create Folder" Click="TestCreateFolderClick"/>
-                <Button Content="Get Selection" Click="TestGetSelectionClick"/>
-                <Button Content="Set Selection" Click="TestSetSelectionClick"/>
-                <Button Content="Get Files" Click="TestGetFilesClick"/>
-                <Button Content="Get File Text" Click="TestGetFileTextClick"/>
+                <Button Content="Open File" Click="TestOpenFileClick" />
+                <Button Content="Create File" Click="TestCreateFileClick" />
+                <Button Content="Delete File" Click="TestDeleteFileClick" />
+                <Button Content="Has File" Click="TestHasFileClick" />
+                <Button Content="Create Folder" Click="TestCreateFolderClick" />
+                <Button Content="Get Selection" Click="TestGetSelectionClick" />
+                <Button Content="Set Selection" Click="TestSetSelectionClick" />
+                <Button Content="Get Files" Click="TestGetFilesClick" />
+                <Button Content="Get File Text" Click="TestGetFileTextClick" />
+                <Button Content="Set File Text" Click="TestSetFileTextClick" />
+                <Button Content="Get Errors" Click="TestGetErrorsClick" />
             </StackPanel>
         </TabItem>
     </TabControl>

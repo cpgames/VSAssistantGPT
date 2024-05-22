@@ -33,14 +33,6 @@ namespace cpGames.VSA
             return Directory.GetFiles(folderPath, $"*{extension}");
         }
 
-        public static string GetRelativePath(string filePath, string folderPath)
-        {
-            var fileUri = new Uri(filePath);
-            var folderUri = new Uri(folderPath);
-            var relativeUri = folderUri.MakeRelativeUri(fileUri);
-            return Uri.UnescapeDataString(relativeUri.ToString().Replace('/', Path.DirectorySeparatorChar));
-        }
-
         public static void OpenInExplorer(string path)
         {
             if (Directory.Exists(path) || File.Exists(path))

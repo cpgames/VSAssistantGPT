@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace cpGames.VSA.RestAPI
 {
@@ -16,15 +17,15 @@ namespace cpGames.VSA.RestAPI
         #endregion
 
         #region Constructors
-        public CreateRunRequest(string threadId, string assistantId)
+        public CreateRunRequest(ThreadModel thread, AssistantModel assistant)
         {
-            _threadId = threadId;
-            _assistantId = assistantId;
-            var jsonBody = new
+            _threadId = thread.id;
+            _assistantId = assistant.id;
+            var runObject = new JObject
             {
-                assistant_id = _assistantId
+                { "assistant_id", _assistantId }
             };
-            var json = JsonConvert.SerializeObject(jsonBody);
+            var json = JsonConvert.SerializeObject(runObject);
             _content = new StringContent(json, Encoding.UTF8, "application/json");
         }
         #endregion

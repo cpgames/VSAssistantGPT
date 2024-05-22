@@ -8,6 +8,7 @@ class SetFileText(ToolBase):
     description = "Sets text to file."
     category = "Programming"
     arguments = [
+            Argument("filename", "string", "Name of the file to set text to."),
             Argument("text", "string", "Text to replace contents of the file with."),
         ]
     

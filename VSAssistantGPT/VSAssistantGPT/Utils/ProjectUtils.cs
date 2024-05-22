@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Windows.Data;
 using System.Windows.Media;
 using cpGames.VSA.ViewModel;
@@ -45,139 +44,55 @@ namespace cpGames.VSA
         #endregion
 
         #region Methods
-        public static string GetProjectFilePath(ProjectModel project)
-        {
-            var solutionPath = DTEUtils.GetSolutionFolderPath();
-            return Path.Combine(solutionPath, $"{project.name}.dproj");
-        }
-
-        public static string GetProjectFilePath()
-        {
-            var solutionPath = DTEUtils.GetSolutionFolderPath();
-            if (string.IsNullOrEmpty(solutionPath))
-            {
-                throw new InvalidOperationException("Solution path is null or empty.");
-            }
-            var directoryInfo = new DirectoryInfo(solutionPath);
-            var projectFile = directoryInfo.GetFiles("*.dproj").FirstOrDefault();
-            if (projectFile == null)
-            {
-                throw new InvalidOperationException("Project file not found.");
-            }
-            return projectFile.FullName;
-        }
-
-        public static ProjectModel LoadProject()
-        {
-            var solutionPath = DTEUtils.GetSolutionFolderPath();
-            var directoryInfo = new DirectoryInfo(solutionPath);
-            var projectFile = directoryInfo.GetFiles("*.dproj").FirstOrDefault();
-            if (projectFile == null)
-            {
-                throw new InvalidOperationException("Project file not found.");
-            }
-
-            using (var file = File.OpenText(projectFile.FullName))
-            {
-                var serializer = new JsonSerializer();
-                var model = (ProjectModel?)serializer.Deserialize(file, typeof(ProjectModel));
-                if (model == null)
-                {
-                    throw new InvalidOperationException("Failed to deserialize project model.");
-                }
-                return model;
-            }
-        }
-
         public static void CreateOrLoadProject()
         {
             if (ActiveProject != null)
             {
                 return;
             }
-            var solutionPath = DTEUtils.GetSolutionFolderPath();
-            var directoryInfo = new DirectoryInfo(solutionPath);
-            var projectFile = directoryInfo.GetFiles("*.dproj").FirstOrDefault();
+            var settingsPath = Path.Combine(Utils.GetOrCreateAppDir(), "settings.json");
             ProjectModel? project;
-            if (projectFile == null)
+            var shouldSave = false;
+            if (!File.Exists(settingsPath))
             {
                 project = new ProjectModel();
-                SaveProject(project);
+                shouldSave = true;
             }
             else
             {
-                project = LoadProject();
-            }
-            if (directoryInfo.GetFiles("AssistantTools.py").Length == 0)
-            {
-                // copy from application bin path
-                var binPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-                File.Copy(Path.Combine(binPath, "Resources/AssistantTools.py"), Path.Combine(DTEUtils.GetSolutionFolderPath(), "AssistantTools.py"));
-            }
-            ActiveProject = new ProjectViewModel(project);
-        }
-
-        public static void SaveProject(ProjectModel project)
-        {
-            var projectFilePath = GetProjectFilePath(project);
-
-            // Delete existing project file if a different name is detected
-            var solutionPath = DTEUtils.GetSolutionFolderPath();
-            var existingFiles = Directory.GetFiles(solutionPath, "*.dproj");
-            foreach (var file in existingFiles)
-            {
-                if (Path.GetFileName(file) != Path.GetFileName(projectFilePath))
+                using (var file = File.OpenText(settingsPath))
                 {
-                    File.Delete(file);
+                    var serializer = new JsonSerializer();
+                    var model = (ProjectModel?)serializer.Deserialize(file, typeof(ProjectModel));
+                    if (model == null)
+                    {
+                        throw new InvalidOperationException("Failed to deserialize settings.");
+                    }
+                    project = model;
                 }
             }
+            ActiveProject = new ProjectViewModel(project);
+            if (shouldSave)
+            {
+                SaveProject();
+            }
+        }
 
-            // Save the current project
-            using (var file = File.CreateText(projectFilePath))
+        public static void SaveProject()
+        {
+            if (ActiveProject == null)
+            {
+                throw new InvalidOperationException("No active project to save.");
+            }
+            var settingsPath = Path.Combine(Utils.GetOrCreateAppDir(), "settings.json");
+            using (var file = File.CreateText(settingsPath))
             {
                 var serializer = new JsonSerializer
                 {
                     Formatting = Formatting.Indented
                 };
-                serializer.Serialize(file, project);
+                serializer.Serialize(file, ActiveProject.Model);
             }
-        }
-        #endregion
-    }
-
-    public class StatusToColorConverter : IValueConverter
-    {
-        #region IValueConverter Members
-        public object Convert(
-            object? value,
-            Type targetType,
-            object? parameter,
-            CultureInfo culture)
-        {
-            if (value is TaskStatus status)
-            {
-                switch (status)
-                {
-                    case TaskStatus.NotStarted:
-                        return Brushes.Cyan;
-                    case TaskStatus.InProgress:
-                        return Brushes.Yellow;
-                    case TaskStatus.Completed:
-                        return Brushes.GreenYellow;
-                    default:
-                        return Brushes.Red;
-                }
-            }
-            return Brushes.White;
-        }
-
-        public object ConvertBack(
-            object? value,
-            Type targetType,
-            object? parameter,
-            CultureInfo culture)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }
