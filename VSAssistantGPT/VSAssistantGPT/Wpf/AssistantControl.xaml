@@ -27,7 +27,8 @@
                 <Label Content="Name:" />
                 <Button Grid.Column="2"
                         Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SaveAssistantClicked">
+                        Click="SaveAssistantClicked"
+                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
                     <Button.Content>
                         <Grid>
                             <Image x:Name="SaveImage"
@@ -40,7 +41,8 @@
 
                 <Button Grid.Column="3"
                         Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="RemoveAssistantClicked">
+                        Click="RemoveAssistantClicked"
+                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
                     <Button.Content>
                         <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
                                Width="16" Height="16" />
@@ -85,7 +87,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <Grid>
+            <Grid Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using cpGames.VSA.ViewModel;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace cpGames.VSA.Wpf
@@ -142,13 +144,9 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
-            var assistant = new AssistantModel
-            {
-                name = "New Assistant",
-                description = "Your helpful assistant",
-                instructions = "Instructions for the assistant"
-            };
-            ViewModel.AddAssistant(assistant);
+            var assistantTemplateJson = JsonConvert.SerializeObject(ViewModel.NewAssistantTemplateViewModel.Model);
+            var assistant = JsonConvert.DeserializeObject<AssistantModel>(assistantTemplateJson);
+            ViewModel.AddAssistant(assistant!);
         }
 
         private void AddToolClicked(object sender, RoutedEventArgs e)
@@ -284,6 +282,17 @@ namespace cpGames.VSA.Wpf
             var vectorStoreViewModel = ViewModel.AddVectorStore(vectorStore);
             await vectorStoreViewModel.CreateAsync();
         }
+
+        private void OpenToolsClicked(object sender, RoutedEventArgs e)
+        {
+            var toolsDir = Utils.GetOrCreateAppDir("Tools");
+            Process.Start(toolsDir);
+        }
+
+        private void SaveProjectClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.Save();
+        }
         #endregion
 
         #region Testing
@@ -304,6 +313,7 @@ namespace cpGames.VSA.Wpf
                 { "text", "This is a test file" }
             };
             ToolAPI.CreateFile(arguments);
+            DTEUtils.SaveFile();
         }
 
         private void TestCreateFolderClick(object sender, RoutedEventArgs e)
@@ -375,6 +385,20 @@ namespace cpGames.VSA.Wpf
         {
             var result = ToolAPI.GetErrors(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestSaveActiveFileClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var relativePath = DTEUtils.GetActiveDocumentRelativePath();
+                OutputWindowHelper.LogInfo("Testing", relativePath);
+                DTEUtils.SaveFile(relativePath);
+            }
+            catch (Exception exception)
+            {
+                OutputWindowHelper.LogError("Testing", exception.Message);
+            }
         }
         #endregion
     }

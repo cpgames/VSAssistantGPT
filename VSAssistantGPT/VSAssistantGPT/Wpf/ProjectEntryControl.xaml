@@ -53,13 +53,28 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="AddToolClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
-                               Width="10" Height="10" Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Click="AddToolClicked">
+                        <Button.Content>
+                            <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
+                                   Margin="2,0,2,0" />
+                        </Button.Content>
+                    </Button>
+                    <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Click="OpenToolsClicked">
+                        <Button.Content>
+                            <Image Source="pack://application:,,,/VSA;component/Resources/icons/open.png"
+                                   Margin="2,0,2,0" />
+                        </Button.Content>
+                    </Button>
+                </Grid>
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Source={StaticResource GroupedTools}}">
                         <ItemsControl.ItemTemplate>
@@ -178,6 +193,21 @@
         </TabItem>
         <TabItem Header="Settings">
             <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                            Click="SaveProjectClicked">
+                        <Button.Content>
+                            <Image
+                                Source="pack://application:,,,/VSA;component/Resources/icons/save.png"
+                                Margin="2,0,2,0" />
+                        </Button.Content>
+                    </Button>
+                </Grid>
 
                 <Label Content="API Key:" />
                 <TextBox
@@ -194,9 +224,11 @@
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                             Click="SelectAssistantClicked" Height="20" />
                 </Grid>
+                <Label Content="New Assistant Template:" />
+                <wpf:AssistantControl DataContext="{Binding NewAssistantTemplateViewModel}" />
             </StackPanel>
         </TabItem>
-        <TabItem Header="Testing">
+        <TabItem Header="Testing" Visibility="{Binding IsDebugVisible}">
             <StackPanel>
                 <Button Content="Open File" Click="TestOpenFileClick" />
                 <Button Content="Create File" Click="TestCreateFileClick" />
@@ -209,6 +241,7 @@
                 <Button Content="Get File Text" Click="TestGetFileTextClick" />
                 <Button Content="Set File Text" Click="TestSetFileTextClick" />
                 <Button Content="Get Errors" Click="TestGetErrorsClick" />
+                <Button Content="Save Active File" Click="TestSaveActiveFileClick" />
             </StackPanel>
         </TabItem>
     </TabControl>

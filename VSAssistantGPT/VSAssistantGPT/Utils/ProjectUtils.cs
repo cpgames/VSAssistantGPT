@@ -32,7 +32,6 @@ namespace cpGames.VSA
                 _activeProject = value;
                 if (_activeProject != null)
                 {
-                    OutputWindowHelper.LogInfo("Project", $"Loaded project: {_activeProject.Name}");
                     onProjectLoaded?.Invoke();
                 }
                 else

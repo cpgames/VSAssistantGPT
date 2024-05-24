@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using cpGames.VSA.RestAPI;
 
 namespace cpGames.VSA.ViewModel
@@ -10,6 +11,8 @@ namespace cpGames.VSA.ViewModel
     {
         #region Fields
         private bool _modified;
+        private bool _isTemplate;
+        private Visibility _templateVisibility = Visibility.Visible;
         #endregion
 
         #region Properties
@@ -96,6 +99,33 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
+        public bool IsTemplate
+        {
+            get => _isTemplate;
+            set
+            {
+                if (_isTemplate != value)
+                {
+                    _isTemplate = value;
+                    OnPropertyChanged();
+                    TemplateVisibility = value ? Visibility.Collapsed : Visibility.Visible;
+                }
+            }
+        }
+
+        public Visibility TemplateVisibility
+        {
+            get => _templateVisibility;
+            set
+            {
+                if (_templateVisibility != value)
+                {
+                    _templateVisibility = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ObservableCollection<ToolEntryViewModel> Toolset { get; } = new();
         #endregion
 
@@ -137,12 +167,11 @@ namespace cpGames.VSA.ViewModel
 
         public async Task DeleteAsync()
         {
-            if (Id == null)
+            if (!string.IsNullOrEmpty(Id))
             {
-                throw new Exception("Assistant has not been created");
+                var request = new DeleteAssistantRequest(Id);
+                await request.SendAsync();
             }
-            var request = new DeleteAssistantRequest(Id);
-            await request.SendAsync();
             RemoveAction?.Invoke();
         }
 

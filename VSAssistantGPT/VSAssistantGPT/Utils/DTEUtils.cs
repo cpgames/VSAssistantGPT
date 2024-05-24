@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using EnvDTE;
+﻿using EnvDTE;
 using EnvDTE80;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace cpGames.VSA
 {
@@ -74,6 +74,11 @@ namespace cpGames.VSA
         {
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             Assumes.Present(dte);
+            var document = dte.ActiveDocument;
+            if (document != null)
+            {
+                return document.ProjectItem?.ContainingProject;
+            }
             if (dte.ActiveSolutionProjects is not Array projects || projects.Length == 0)
             {
                 return null;
@@ -279,9 +284,20 @@ namespace cpGames.VSA
             }
             ValidateFileName(ref fileName);
             var fullPath = Path.Combine(GetProjectPath(), fileName);
-            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
-            var document = dte.Documents.Item(fullPath);
-            document.Save();
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            var items = dte.Documents.GetEnumerator();
+            while (items.MoveNext())
+            {
+                var fullName = ((Document)items.Current!).FullName;
+                OutputWindowHelper.LogInfo("Test", fullName);
+            }
+            OutputWindowHelper.LogInfo("Saving", fullPath);
+            var item = dte.Solution.FindProjectItem(fullPath);
+            if (item is { Document: not null })
+            {
+                var document = item.Document;
+                document.Save();
+            }
         }
 
         public static string GetSolutionFolderPath()

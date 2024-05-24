@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using cpGames.VSA.RestAPI;
 using Newtonsoft.Json.Linq;
 
@@ -10,48 +11,10 @@ namespace cpGames.VSA.ViewModel
     {
         #region Fields
         private bool _working;
+        private readonly AssistantViewModel _newAssistantTemplateViewModel;
         #endregion
 
         #region Properties
-        public string Name
-        {
-            get => _model.name;
-            set
-            {
-                if (_model.name != value)
-                {
-                    _model.name = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string Description
-        {
-            get => _model.description;
-            set
-            {
-                if (_model.description != value)
-                {
-                    _model.description = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string Team
-        {
-            get => _model.team;
-            set
-            {
-                if (_model.team != value)
-                {
-                    _model.team = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
         public string ApiKey
         {
             get => _model.apiKey;
@@ -61,7 +24,6 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.apiKey = value;
                     OnPropertyChanged();
-                    ProjectUtils.SaveProject();
                 }
             }
         }
@@ -74,7 +36,6 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.selectedAssistant = value;
                     OnPropertyChanged();
-                    ProjectUtils.SaveProject();
                 }
             }
         }
@@ -92,7 +53,21 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
+        public Visibility IsDebugVisible
+        {
+            get
+            {
+#if DEBUG
+                return Visibility.Visible;
+#else
+                return Visibility.Collapsed;
+#endif
+            }
+        }
+
         public ThreadViewModel Thread { get; } = new(new ThreadModel());
+
+        public AssistantViewModel NewAssistantTemplateViewModel => _newAssistantTemplateViewModel;
 
         public ObservableCollection<AssistantViewModel> Assistants { get; } = new();
 
@@ -104,7 +79,13 @@ namespace cpGames.VSA.ViewModel
         #endregion
 
         #region Constructors
-        public ProjectViewModel(ProjectModel projectModel) : base(projectModel) { }
+        public ProjectViewModel(ProjectModel projectModel) : base(projectModel)
+        {
+            _newAssistantTemplateViewModel = new AssistantViewModel(_model.newAssistantTemplate)
+            {
+                IsTemplate = true
+            };
+        }
         #endregion
 
         #region Methods
