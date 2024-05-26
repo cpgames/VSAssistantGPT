@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,10 @@ namespace cpGames.VSA
     public delegate Task<string> ToolCallback(string funcJson);
     public static class ToolAPI
     {
+        #region Fields
+        private static bool _pythonEngineInitialized  ;
+        #endregion
+
         #region Constructors
         static ToolAPI()
         {
@@ -25,17 +30,44 @@ namespace cpGames.VSA
                 var destFile = Path.Combine(pythonDir, Path.GetFileName(file));
                 File.Copy(file, destFile, true);
             }
-
-            Runtime.PythonDLL = "python39.dll";
-            PythonEngine.PythonHome = @"C:\Users\mikha\miniconda3";
-
-            PythonEngine.Initialize();
-            PythonEngine.BeginAllowThreads();
-            RegisterPythonCallbacks();
         }
         #endregion
 
         #region Methods
+        private static bool InitializePythonEngine()
+        {
+            if (_pythonEngineInitialized)
+            {
+                return true;
+            }
+
+            try
+            {
+                if (!ProjectUtils.ActiveProject.ValidateSettings())
+                {
+                    return false;
+                }
+                var pythonFile = new FileInfo(ProjectUtils.ActiveProject.PythonDll);
+                if (!pythonFile.Exists)
+                {
+                    throw new Exception("Python dll not found.");
+                }
+                Runtime.PythonDLL = pythonFile.Name;
+                PythonEngine.PythonHome = pythonFile.DirectoryName!;
+
+                PythonEngine.Initialize();
+                PythonEngine.BeginAllowThreads();
+                RegisterPythonCallbacks();
+                _pythonEngineInitialized = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                OutputWindowHelper.LogError("Error", ex.Message);
+            }
+            return false;
+        }
+
         private static void RegisterPythonCallbacks()
         {
             using (Py.GIL())
@@ -48,17 +80,9 @@ namespace cpGames.VSA
             }
         }
 
-        private static string GetResponseSuccess()
-        {
-            JToken response = new JObject
-            {
-                ["success"] = true
-            };
-            return response.ToString();
-        }
-
         private static string GetResponseError(string error)
         {
+            OutputWindowHelper.LogError("Tool Error", error);
             JToken response = new JObject
             {
                 ["success"] = false,
@@ -96,22 +120,26 @@ namespace cpGames.VSA
             // Check if the method exists and invoke it if found
             if (method != null)
             {
-                var result = method.Invoke(null, new object[] { argumentsDict });
-                return result.ToString();
+                try
+                {
+                    var result = method.Invoke(null, new object[] { argumentsDict });
+                    return result.ToString();
+                }
+                catch (Exception e)
+                {
+                    return GetResponseError($"Error invoking tool '{toolNameStr}': {e.Message}");
+                }
             }
 
             return GetResponseError($"Tool '{toolNameStr}' not found.");
         }
 
-        public static string HandleToolRequest(string name, Dictionary<string, object> arguments)
-        {
-            // Implement your tool logic here
-            return $"Received tool request: {name}, with arguments: {JsonConvert.SerializeObject(arguments)}";
-        }
-
         public static async Task<string> HandleToolCallAsync(JToken toolCall)
         {
-            // Convert tool call to JSON string
+            if (!InitializePythonEngine())
+            {
+                return GetResponseError("PythonEngine not initialized");
+            }
             var toolCallJson = toolCall.ToString(Formatting.Indented);
             await OutputWindowHelper.LogInfoAsync("Tool Call", toolCallJson);
             var result = await Task.Run(
@@ -132,13 +160,19 @@ namespace cpGames.VSA
             return result;
         }
 
-        public static string GetToolset()
+        public static bool GetToolset(out string? toolsetJson)
         {
+            if (!InitializePythonEngine())
+            {
+                toolsetJson = null;
+                return false;
+            }
             using (Py.GIL())
             {
                 dynamic tools = Py.Import("AssistantTools");
                 var toolset = tools.get_tools_info().ToString();
-                return toolset;
+                toolsetJson = toolset;
+                return true;
             }
         }
 
@@ -179,10 +213,7 @@ namespace cpGames.VSA
             var toolCallJson = toolCall.ToString();
             using (Py.GIL())
             {
-                // Import the Python script
                 dynamic tools = Py.Import("AssistantTools");
-
-                //var response = tools.test_call_func("testFunc").ToString();
                 var response = tools.call_tool_function(toolCallJson).ToString();
                 return response;
             }
@@ -219,24 +250,54 @@ namespace cpGames.VSA
         public static JObject SetSelection(Dictionary<string, dynamic> arguments)
         {
             DTEUtils.SetSelection(arguments["text"]);
-            DTEUtils.SaveFile();
+            DTEUtils.SaveDocument();
             return new JObject
             {
                 ["result"] = "success"
             };
         }
 
-        public static JObject GetFileText(Dictionary<string, dynamic> arguments)
+        public static JObject GetActiveDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var filename = arguments["filename"];
-            if (!DTEUtils.FileExists(filename))
+            var text = DTEUtils.GetActiveDocumentText();
+            return new JObject
+            {
+                ["text"] = text,
+                ["result"] = "success"
+            };
+        }
+
+        public static JObject SetActiveDocumentText(Dictionary<string, dynamic> arguments)
+        {
+            DTEUtils.SetActiveDocumentText(arguments["text"]);
+            DTEUtils.SaveDocument();
+            return new JObject
+            {
+                ["result"] = "success"
+            };
+        }
+
+        public static JObject GetActiveDocumentPath(Dictionary<string, dynamic> arguments)
+        {
+            var documentPath = DTEUtils.GetActiveDocumentRelativePath();
+            return new JObject
+            {
+                ["documentPath"] = documentPath,
+                ["result"] = "success"
+            };
+        }
+
+        public static JObject GetDocumentText(Dictionary<string, dynamic> arguments)
+        {
+            var documentPath = arguments["documentPath"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenFile(filename);
+            DTEUtils.OpenDocument(documentPath);
             var result = new JObject
             {
                 ["result"] = "success",
@@ -245,88 +306,105 @@ namespace cpGames.VSA
             return result;
         }
 
-        public static JObject SetFileText(Dictionary<string, dynamic> arguments)
+        public static JObject SetDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var filename = arguments["filename"];
-            if (!DTEUtils.FileExists(filename))
+            var documentPath = arguments["documentPath"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenFile(filename);
+            DTEUtils.OpenDocument(documentPath);
             DTEUtils.SetActiveDocumentText(arguments["text"]);
-            DTEUtils.SaveFile();
+            DTEUtils.SaveDocument();
             return new JObject
             {
                 ["result"] = "success"
             };
         }
 
-        public static JObject OpenFile(Dictionary<string, dynamic> arguments)
+        public static JObject OpenDocument(Dictionary<string, dynamic> arguments)
         {
-            string filename = arguments["filename"];
-            if (!DTEUtils.FileExists(filename))
+            string documentPath = arguments["documentPath"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenFile(filename);
+            DTEUtils.OpenDocument(documentPath);
             return new JObject
             {
                 ["result"] = "success"
             };
         }
 
-        public static JObject CreateFile(Dictionary<string, dynamic> arguments)
+        public static JObject CloseDocument(Dictionary<string, dynamic> arguments)
         {
-            string filename = arguments["filename"];
+            string documentPath = arguments["documentPath"];
+            if (!DTEUtils.DocumentExists(documentPath))
+            {
+                return new JObject
+                {
+                    ["result"] = "file not found"
+                };
+            }
+            DTEUtils.CloseDocument(documentPath);
+            return new JObject
+            {
+                ["result"] = "success"
+            };
+        }
+
+        public static JObject CreateDocument(Dictionary<string, dynamic> arguments)
+        {
+            string documentPath = arguments["documentPath"];
             string text = arguments["text"];
-            DTEUtils.CreateFile(filename);
-            SetFileText(
+            DTEUtils.CreateDocument(documentPath);
+            SetDocumentText(
                 new Dictionary<string, dynamic>
                 {
-                    ["filename"] = filename,
+                    ["documentPath"] = documentPath,
                     ["text"] = text
                 });
-            DTEUtils.SaveFile();
+            DTEUtils.SaveDocument();
             return new JObject
             {
                 ["result"] = "success"
             };
         }
 
-        public static JObject DeleteFile(Dictionary<string, dynamic> arguments)
+        public static JObject DeleteDocument(Dictionary<string, dynamic> arguments)
         {
-            string filename = arguments["filename"];
-            DTEUtils.DeleteFile(filename);
+            string documentPath = arguments["documentPath"];
+            DTEUtils.DeleteDocument(documentPath);
             return new JObject
             {
                 ["result"] = "success"
             };
         }
 
-        public static JObject HasFile(Dictionary<string, dynamic> arguments)
+        public static JObject HasDocument(Dictionary<string, dynamic> arguments)
         {
-            string filename = arguments["filename"];
+            string documentPath = arguments["documentPath"];
             var result = new JObject
             {
-                ["result"] = DTEUtils.FileExists(filename)
+                ["result"] = DTEUtils.DocumentExists(documentPath)
             };
             return result;
         }
 
-        public static JObject ListFiles(Dictionary<string, dynamic> arguments)
+        public static JObject ListDocuments(Dictionary<string, dynamic> arguments)
         {
             var files = DTEUtils.GetProjectItemsInActiveProject();
             var filesArr = new JArray();
             foreach (var file in files)
             {
-                var filename = DTEUtils.GetRelativePath(file.FileNames[0]);
-                filesArr.Add(filename);
+                var documentPath = DTEUtils.GetRelativePath(file.FileNames[0]);
+                filesArr.Add(documentPath);
             }
             var result = new JObject
             {

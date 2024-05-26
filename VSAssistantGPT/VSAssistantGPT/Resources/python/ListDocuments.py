@@ -1,12 +1,12 @@
-# ListFiles.py
+# ListDocuments.py
 
 import json
 from ToolBase import ToolBase
 
 
-class ListFiles(ToolBase):
-    name = "ListFiles"
-    description = "Lists all file relative paths in the project."
+class ListDocuments(ToolBase):
+    name = "ListDocuments"
+    description = "List all documents (relative paths) in the project."
     category = "Programming"
 
     def call(self, function, tool_callback):

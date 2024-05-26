@@ -91,7 +91,7 @@ namespace cpGames.VSA.Wpf
 
         private async void SelectAssistantClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null || ProjectUtils.ActiveProject == null)
+            if (ViewModel == null)
             {
                 return;
             }

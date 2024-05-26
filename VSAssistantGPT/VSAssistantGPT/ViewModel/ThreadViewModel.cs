@@ -97,21 +97,45 @@ namespace cpGames.VSA.ViewModel
         #region Methods
         public async Task CreateAsync()
         {
-            var request = new CreateThreadRequest();
-            var response = await request.SendAsync();
-            Id = response.id;
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                var request = new CreateThreadRequest();
+                var response = await request.SendAsync();
+                Id = response.id;
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+            }
         }
 
         public async Task DeleteAsync()
         {
             if (string.IsNullOrEmpty(Id))
             {
-                throw new Exception("Thread has not been created");
+                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                return;
             }
-            var request = new DeleteThreadRequest(Id);
-            await request.SendAsync();
-            Id = string.Empty;
-            Messages.Clear();
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                var request = new DeleteThreadRequest(Id);
+                await request.SendAsync();
+                Id = string.Empty;
+                Messages.Clear();
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                return;
+            }
             RemoveAction?.Invoke();
         }
 
@@ -121,48 +145,78 @@ namespace cpGames.VSA.ViewModel
             {
                 await CreateAsync();
             }
-            var request = new PostMessageRequest(Id, content, new List<string>());
-            await request.SendAsync();
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                var request = new PostMessageRequest(Id, content, new List<string>());
+                await request.SendAsync();
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                return;
+            }
             await UpdateMessagesAsync();
-            await RunThread();
+            await RunThreadAsync();
         }
 
         public async Task UpdateMessagesAsync()
         {
             if (string.IsNullOrEmpty(Id))
             {
-                throw new Exception("Thread has not been created");
+                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                return;
             }
-            var request = new ListMessagesRequest(Id);
-            var response = await request.SendAsync();
-            Messages.Clear();
-            foreach (var message in response.data)
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
             {
-                JArray content = message.content;
-                if (content.Count == 0)
+                return;
+            }
+            try
+            {
+                var request = new ListMessagesRequest(Id);
+                var response = await request.SendAsync();
+                Messages.Clear();
+                foreach (var message in response.data)
                 {
-                    continue;
+                    JArray content = message.content;
+                    if (content.Count == 0)
+                    {
+                        continue;
+                    }
+                    var text = content[0]["text"]!["value"]!.ToString();
+                    var messageModel = new MessageModel
+                    {
+                        id = message.id,
+                        role = message.role,
+                        text = text
+                    };
+                    Messages.Add(new MessageViewModel(messageModel));
                 }
-                var text = content[0]["text"]!["value"]!.ToString();
-                var messageModel = new MessageModel
-                {
-                    id = message.id,
-                    role = message.role,
-                    text = text
-                };
-                Messages.Add(new MessageViewModel(messageModel));
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
             }
         }
 
-        public async Task RunThread()
+        public async Task RunThreadAsync()
         {
             if (string.IsNullOrEmpty(Id))
             {
-                throw new Exception("Thread has not been created");
+                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                return;
             }
             if (Assistant == null)
             {
-                throw new Exception("Assistant has not been set");
+                await OutputWindowHelper.LogErrorAsync("Error", "Assistant has not been set.");
+                return;
+            }
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
             }
             var run = new RunModel();
             Run = new RunViewModel(run)

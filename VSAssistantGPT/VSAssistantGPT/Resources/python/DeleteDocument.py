@@ -1,14 +1,14 @@
-# DeleteFile.py
+# DeleteDocument.py
 
 import json
 from ToolBase import *
 
-class DeleteFile(ToolBase):
-    name = "DeleteFile"
-    description = "Deletes a file."
+class DeleteDocument(ToolBase):
+    name = "DeleteDocument"
+    description = "Delete a document."
     category = "Programming"
     arguments = [
-            Argument("filename", "string", "Name of the file to delete."),
+            Argument("documentPath", "string", "Relative path of the document."),
         ]
     
     def call(self, function, tool_callback):

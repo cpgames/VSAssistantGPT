@@ -1,14 +1,14 @@
-# HasFile.py
+# HasDocument.py
 
 import json
 from ToolBase import *
 
 class HasFile(ToolBase):
-    name = "HasFile"
-    description = "Checks if a file exists."
+    name = "HasDocument"
+    description = "Check if a document exists."
     category = "Programming"
     arguments = [
-            Argument("filename", "string", "Name of the file to check."),
+        Argument("documentPath", "string", "Relative path of the document."),
         ]
     
     def call(self, function, tool_callback):

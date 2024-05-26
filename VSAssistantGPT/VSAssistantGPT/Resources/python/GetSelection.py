@@ -5,7 +5,7 @@ from ToolBase import ToolBase
 
 class GetSelection(ToolBase):
     name = "GetSelection"
-    description = "Gets selected text in file."
+    description = "Get selected text in active document."
     category = "Programming"
 
     def call(self, function, tool_callback):

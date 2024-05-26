@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using cpGames.VSA.ViewModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -20,7 +21,7 @@ namespace cpGames.VSA.RestAPI
         #endregion
 
         #region Constructors
-        public CreateOrModifyAssistantRequest(AssistantModel assistantModel, List<ToolModel> toolset)
+        public CreateOrModifyAssistantRequest(AssistantModel assistantModel, IEnumerable<ToolViewModel> toolset)
         {
             _assistantId = assistantModel.id;
             var assistantObject = new JObject
@@ -53,7 +54,7 @@ namespace cpGames.VSA.RestAPI
             }
             foreach (var toolEntry in assistantModel.toolset)
             {
-                var tool = toolset.FirstOrDefault(t => t.name == toolEntry.name);
+                var tool = toolset.FirstOrDefault(t => t.Name == toolEntry.name);
                 if (tool == null)
                 {
                     OutputWindowHelper.LogInfo("CreateAssistantRequest", $"Tool {toolEntry} not found in toolset");
@@ -61,13 +62,13 @@ namespace cpGames.VSA.RestAPI
                 }
                 var funcObj = new JObject
                 {
-                    { "name", tool.name },
-                    { "description", tool.description }
+                    { "name", tool.Name },
+                    { "description", tool.Description }
                 };
-                if (tool.arguments.Count > 0)
+                if (tool.Model.arguments.Count > 0)
                 {
                     var propListObj = new JObject();
-                    foreach (var property in tool.arguments)
+                    foreach (var property in tool.Model.arguments)
                     {
                         var propObj = new JObject
                         {
@@ -77,7 +78,7 @@ namespace cpGames.VSA.RestAPI
                         propListObj[property.name] = propObj;
                     }
                     var requiredArr = new JArray();
-                    foreach (var property in tool.arguments
+                    foreach (var property in tool.Model.arguments
                                  .Where(property => property.required))
                     {
                         requiredArr.Add(property.name);

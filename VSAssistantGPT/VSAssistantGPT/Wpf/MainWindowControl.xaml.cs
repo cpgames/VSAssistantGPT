@@ -17,7 +17,6 @@ namespace cpGames.VSA.Wpf
         #region Events
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            ProjectUtils.CreateOrLoadProject();
             var projectControl = new ProjectEntryControl();
             contentControl.Content = projectControl;
         }

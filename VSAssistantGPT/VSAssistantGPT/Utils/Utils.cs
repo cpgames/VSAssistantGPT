@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Windows.Data;
 using PCRE;
 
 namespace cpGames.VSA
@@ -48,5 +50,19 @@ namespace cpGames.VSA
                 PcreRegex.IsMatch(str, pattern);
         }
         #endregion
+    }
+
+    public class ImagePathConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            string imageName = (string)value!;
+            return $"pack://application:,,,/VSA;component/Resources/icons/{imageName}.png";
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

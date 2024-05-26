@@ -18,6 +18,7 @@ namespace cpGames.VSA.ViewModel
         #region Properties
         public Action? CreateAction { get; set; }
         public Action? RemoveAction { get; set; }
+
         public bool Modified
         {
             get => _modified;
@@ -30,6 +31,7 @@ namespace cpGames.VSA.ViewModel
                 }
             }
         }
+
         public string Id
         {
             get => _model.id;
@@ -150,18 +152,25 @@ namespace cpGames.VSA.ViewModel
         #region Methods
         public async Task SaveAsync()
         {
-            if (ProjectUtils.ActiveProject == null)
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
             {
-                throw new Exception("No active project");
+                return;
             }
             if (ProjectUtils.ActiveProject.Toolset.Count == 0)
             {
                 ProjectUtils.ActiveProject.LoadToolset();
             }
-            var createAssistantRequest = new CreateOrModifyAssistantRequest(Model, ProjectUtils.ActiveProject.Model.toolset);
-            var createAssistantResponse = await createAssistantRequest.SendAsync();
-            Id = createAssistantResponse.id;
-            Modified = false;
+            try
+            {
+                var createAssistantRequest = new CreateOrModifyAssistantRequest(Model, ProjectUtils.ActiveProject.Toolset);
+                var createAssistantResponse = await createAssistantRequest.SendAsync();
+                Id = createAssistantResponse.id;
+                Modified = false;
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+            }
             CreateAction?.Invoke();
         }
 
@@ -169,8 +178,19 @@ namespace cpGames.VSA.ViewModel
         {
             if (!string.IsNullOrEmpty(Id))
             {
-                var request = new DeleteAssistantRequest(Id);
-                await request.SendAsync();
+                if (!ProjectUtils.ActiveProject.ValidateSettings())
+                {
+                    return;
+                }
+                try
+                {
+                    var request = new DeleteAssistantRequest(Id);
+                    await request.SendAsync();
+                }
+                catch (Exception e)
+                {
+                    await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                }
             }
             RemoveAction?.Invoke();
         }

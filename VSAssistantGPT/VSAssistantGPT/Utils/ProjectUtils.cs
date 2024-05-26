@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
-using System.Windows.Data;
-using System.Windows.Media;
+using System.Reflection;
 using cpGames.VSA.ViewModel;
 using Newtonsoft.Json;
 
@@ -13,42 +11,30 @@ namespace cpGames.VSA
         #region Fields
         public const string PROJ_EXTENSION = ".dproj";
 
-        private static ProjectViewModel? _activeProject;
-
-        public static Action? onProjectLoaded;
-        public static Action? onProjectUnloaded;
+        private static readonly ProjectViewModel _activeProject;
         #endregion
 
         #region Properties
-        public static ProjectViewModel? ActiveProject
+        public static ProjectViewModel ActiveProject => _activeProject;
+        #endregion
+
+        #region Constructors
+        static ProjectUtils()
         {
-            get => _activeProject;
-            set
+            var settingsPath = Path.Combine(Utils.GetOrCreateAppDir(), "settings.json");
+            if (!File.Exists(settingsPath))
             {
-                if (_activeProject == value)
-                {
-                    return;
-                }
-                _activeProject = value;
-                if (_activeProject != null)
-                {
-                    onProjectLoaded?.Invoke();
-                }
-                else
-                {
-                    onProjectUnloaded?.Invoke();
-                }
+                var assemblyPath = Assembly.GetExecutingAssembly().Location;
+                var defaultSettingsPath = Path.Combine(Path.GetDirectoryName(assemblyPath)!, "Resources", "settings.json");
+                File.Copy(defaultSettingsPath, settingsPath);
             }
+            _activeProject = CreateOrLoadProject();
         }
         #endregion
 
         #region Methods
-        public static void CreateOrLoadProject()
+        private static ProjectViewModel CreateOrLoadProject()
         {
-            if (ActiveProject != null)
-            {
-                return;
-            }
             var settingsPath = Path.Combine(Utils.GetOrCreateAppDir(), "settings.json");
             ProjectModel? project;
             var shouldSave = false;
@@ -70,19 +56,16 @@ namespace cpGames.VSA
                     project = model;
                 }
             }
-            ActiveProject = new ProjectViewModel(project);
+            var projectViewModel = new ProjectViewModel(project);
             if (shouldSave)
             {
                 SaveProject();
             }
+            return projectViewModel;
         }
 
         public static void SaveProject()
         {
-            if (ActiveProject == null)
-            {
-                throw new InvalidOperationException("No active project to save.");
-            }
             var settingsPath = Path.Combine(Utils.GetOrCreateAppDir(), "settings.json");
             using (var file = File.CreateText(settingsPath))
             {
@@ -92,37 +75,6 @@ namespace cpGames.VSA
                 };
                 serializer.Serialize(file, ActiveProject.Model);
             }
-        }
-        #endregion
-    }
-
-    public class AssistantNameToColorConverter : IValueConverter
-    {
-        #region IValueConverter Members
-        public object Convert(
-            object? value,
-            Type targetType,
-            object? parameter,
-            CultureInfo culture)
-        {
-            if (value is string assistantName &&
-                ProjectUtils.ActiveProject != null)
-            {
-                if (ProjectUtils.ActiveProject.SelectedAssistant == assistantName)
-                {
-                    return Brushes.White;
-                }
-            }
-            return Brushes.Black;
-        }
-
-        public object ConvertBack(
-            object? value,
-            Type targetType,
-            object? parameter,
-            CultureInfo culture)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }

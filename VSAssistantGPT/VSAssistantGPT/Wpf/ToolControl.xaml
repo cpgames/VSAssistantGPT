@@ -24,24 +24,14 @@
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
                 <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SaveToolClicked">
-                    <Button.Content>
-                        <Grid>
-                            <Image x:Name="SaveImage" Source="pack://application:,,,/VSA;component/Resources/icons/save.png"
-                                   Width="16" Height="16"/>
-                            <Rectangle x:Name="TintRectangle" Style="{StaticResource TintRectangleStyle}" Opacity="0.5" />
-                        </Grid>
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="save"
+                        Click="SaveToolClicked"/>
+
                 <Button Grid.Column="3"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="RemoveToolClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                               Width="16" Height="16" />
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="delete"
+                        Click="RemoveToolClicked"/>
             </Grid>
             <TextBox Text="{Binding Path=Name, FallbackValue='Tool Name'}" />
             <Label Content="Category:" />

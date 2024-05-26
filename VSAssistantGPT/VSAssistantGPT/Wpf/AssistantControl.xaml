@@ -26,28 +26,15 @@
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
                 <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Style="{StaticResource ImageSaveButtonStyle}"
+                        Tag="save"
                         Click="SaveAssistantClicked"
-                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
-                    <Button.Content>
-                        <Grid>
-                            <Image x:Name="SaveImage"
-                                   Source="pack://application:,,,/VSA;component/Resources/icons/save.png"
-                                   Width="16" Height="16" />
-                            <Rectangle x:Name="TintRectangle" Style="{StaticResource TintRectangleStyle}" Opacity="0.5" />
-                        </Grid>
-                    </Button.Content>
-                </Button>
-
+                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}" />
                 <Button Grid.Column="3"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="delete"
                         Click="RemoveAssistantClicked"
-                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                               Width="16" Height="16" />
-                    </Button.Content>
-                </Button>
+                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}"/>
             </Grid>
             <TextBox
                 Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='Assistant Name'}" />
@@ -67,13 +54,9 @@
                 </Grid.ColumnDefinitions>
                 <Label Content="Toolset:" />
                 <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="AddToolClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
-                               Width="10" Height="10" Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="plus"
+                        Click="AddToolClicked"/>
             </Grid>
             <ItemsControl ItemsSource="{Binding Toolset}">
                 <ItemsControl.ItemsPanel>

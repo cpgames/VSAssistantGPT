@@ -78,19 +78,41 @@ namespace cpGames.VSA.ViewModel
         #region Methods
         public void Remove()
         {
-            ToolAPI.RemoveTool(Name);
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                ToolAPI.RemoveTool(Name);
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError("Error", e.Message);
+            }
             RemoveAction?.Invoke();
         }
 
         public void Save()
         {
-            var toolData = new JObject
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
             {
-                ["name"] = Name,
-                ["category"] = Category,
-                ["description"] = Description
-            };
-            ToolAPI.SaveTool(_originalName, toolData);
+                return;
+            }
+            try
+            {
+                var toolData = new JObject
+                {
+                    ["name"] = Name,
+                    ["category"] = Category,
+                    ["description"] = Description
+                };
+                ToolAPI.SaveTool(_originalName, toolData);
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError("Error", e.Message);
+            }
             Modified = false;
         }
         #endregion

@@ -7,8 +7,10 @@ namespace cpGames.VSA.ViewModel
 {
     public class RunViewModel : ViewModel<RunModel>
     {
+        #region Fields
         private ThreadViewModel? _thread;
         private AssistantViewModel? _assistant;
+        #endregion
 
         #region Properties
         public Action? RunStarted { get; set; }
@@ -39,9 +41,9 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public AssistantViewModel Assistant
+        public AssistantViewModel? Assistant
         {
-            get => _assistant!;
+            get => _assistant;
             set
             {
                 if (_assistant != value)
@@ -77,26 +79,39 @@ namespace cpGames.VSA.ViewModel
         {
             if (Thread == null)
             {
-                throw new Exception("Thread has not been set");
+                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been set.");
+                return;
             }
             if (Assistant == null)
             {
-                throw new Exception("Assistant has not been set");
+                await OutputWindowHelper.LogErrorAsync("Error", "Assistant has not been set.");
+                return;
+            }
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
             }
             RunStarted?.Invoke();
-            var request = new CreateRunRequest(Thread.Model, Assistant.Model);
-            var response = await request.SendAsync();
-            Id = response.id;
-            UpdateStatus(response.status.ToString());
-            do
+            try
             {
-                await Task.Delay(500);
-                await GetAsync();
-            } while (!Ended);
+                var request = new CreateRunRequest(Thread.Model, Assistant.Model);
+                var response = await request.SendAsync();
+                Id = response.id;
+                UpdateStatus(response.status.ToString());
+                do
+                {
+                    await Task.Delay(500);
+                    await GetAsync();
+                } while (!Ended);
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+            }
             RunEnded?.Invoke();
         }
 
-        public async Task GetAsync()
+        private async Task GetAsync()
         {
             if (Id == null)
             {
@@ -123,7 +138,7 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public async Task SubmitToolOutputsAsync(Dictionary<string, string> outputs)
+        private async Task SubmitToolOutputsAsync(Dictionary<string, string> outputs)
         {
             if (Id == null)
             {

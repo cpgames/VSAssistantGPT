@@ -30,7 +30,7 @@ namespace cpGames.VSA.Wpf
         #region Methods
         private void AddToolClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null || ProjectUtils.ActiveProject == null)
+            if (ViewModel == null)
             {
                 return;
             }
@@ -136,7 +136,7 @@ namespace cpGames.VSA.Wpf
 
         private async void SelectVectorStoreClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null || ProjectUtils.ActiveProject == null)
+            if (ViewModel == null)
             {
                 return;
             }

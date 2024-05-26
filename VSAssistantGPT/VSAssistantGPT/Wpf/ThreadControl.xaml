@@ -1,10 +1,10 @@
 ﻿<UserControl x:Class="cpGames.VSA.Wpf.ThreadControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:cpGames.VSA.Wpf"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -16,49 +16,50 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Button Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                    Click="RefreshThreadClicked" ToolTip="Refresh thread">
-                <Button.Content>
-                    <Image Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
-                           Width="16" Height="16" Margin="2,0,2,0" />
-                </Button.Content>
-            </Button>
-            <Border  Grid.Column="1" CornerRadius="3" BorderThickness="1" BorderBrush="White">
+            <Button
+                Style="{StaticResource ImageButtonStyle}"
+                Tag="refresh"
+                Click="RefreshThreadClicked"
+                ToolTip="Refresh thread" />
+            <Border Grid.Column="1" CornerRadius="3" BorderThickness="1" BorderBrush="White">
                 <Grid>
-                    <TextBox Name="MessageText" TextWrapping="Wrap" KeyDown="MessageTextKeyDown" Style="{StaticResource TextBoxInputStyle}"/>
+                    <TextBox Name="MessageText" TextWrapping="Wrap" KeyDown="MessageTextKeyDown"
+                             Style="{StaticResource TextBoxInputStyle}" />
                     <TextBlock Name="PlaceholderText" Text="Type your message..." IsHitTestVisible="False"
                                VerticalAlignment="Center" Margin="5,0,0,0"
                                Foreground="Gray" Visibility="Collapsed" />
                 </Grid>
             </Border>
-            <Button Grid.Column="2" Name="SubmitButton" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                    ToolTip="Submit (Enter). Add new line (Shit+Enter)." Click="SubmitClicked" Height="20" Width="20">
-                <Image Source="pack://application:,,,/VSA;component/Resources/icons/Submit.png" />
-            </Button>
+            <Button Grid.Column="2"
+                    Name="SubmitButton"
+                    Style="{StaticResource ImageButtonStyle}"
+                    Tag="submit"
+                    Click="SubmitClicked"
+                    ToolTip="Submit (Enter). Add new line (Shit+Enter)." />
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0" Content="Assistant:" Foreground="White" />
             <Label Grid.Column="1" Content="{Binding AssistantName}" Foreground="White" />
             <Button Grid.Column="2" Content="..." Foreground="White"
                     Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                     Click="SelectAssistantClicked" Height="20" />
-            
+
         </Grid>
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
             <StackPanel>
@@ -66,7 +67,7 @@
                 <ItemsControl ItemsSource="{Binding Messages}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <local:MessageControl/>
+                            <local:MessageControl />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

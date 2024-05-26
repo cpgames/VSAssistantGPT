@@ -95,10 +95,22 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                throw new Exception("File is not uploaded yet.");
+                await OutputWindowHelper.LogErrorAsync("Error", "File is not uploaded yet.");
+                return;
             }
-            var request = new DeleteFileRequest(Id);
-            await request.SendAsync();
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                var request = new DeleteFileRequest(Id);
+                await request.SendAsync();
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+            }
             RemoveAction?.Invoke();
         }
 
@@ -106,37 +118,44 @@ namespace cpGames.VSA.ViewModel
         {
             if (!string.IsNullOrEmpty(Id))
             {
-                throw new Exception("File is already uploaded.");
+                await OutputWindowHelper.LogErrorAsync("Error", "File is already uploaded.");
+                return;
             }
-
-            var tmpDir = Utils.GetOrCreateAppDir("tmp");
-            string tmpFilePath;
-            if (!Path.StartsWith(tmpDir))
+            try
             {
-                var content = File.ReadAllText(Path);
-                var relativePath = DTEUtils.GetRelativePath(Path);
-
-                var fileObject = new JObject
+                var tmpDir = Utils.GetOrCreateAppDir("tmp");
+                string tmpFilePath;
+                if (!Path.StartsWith(tmpDir))
                 {
-                    ["path"] = relativePath,
-                    ["data"] = content
-                };
+                    var content = File.ReadAllText(Path);
+                    var relativePath = DTEUtils.GetRelativePath(Path);
 
-                tmpFilePath = System.IO.Path.Combine(tmpDir, System.IO.Path.GetFileName(Path));
-                File.WriteAllText(tmpFilePath, fileObject.ToString());
+                    var fileObject = new JObject
+                    {
+                        ["path"] = relativePath,
+                        ["data"] = content
+                    };
+
+                    tmpFilePath = System.IO.Path.Combine(tmpDir, System.IO.Path.GetFileName(Path));
+                    File.WriteAllText(tmpFilePath, fileObject.ToString());
+                }
+                else
+                {
+                    tmpFilePath = Path;
+                }
+
+                // Upload the file
+                var request = new UploadFileRequest(tmpFilePath);
+                var response = await request.SendAsync();
+                Id = response.id;
+
+                // Delete the temporary file
+                File.Delete(tmpFilePath);
             }
-            else
+            catch (Exception e)
             {
-                tmpFilePath = Path;
+                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
             }
-
-            // Upload the file
-            var request = new UploadFileRequest(tmpFilePath);
-            var response = await request.SendAsync();
-            Id = response.id;
-
-            // Delete the temporary file
-            File.Delete(tmpFilePath);
         }
         #endregion
     }
