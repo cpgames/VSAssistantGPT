@@ -95,7 +95,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "File is not uploaded yet.");
+                await OutputWindowHelper.LogErrorAsync("File is not uploaded yet.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -109,7 +109,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
             RemoveAction?.Invoke();
         }
@@ -118,7 +118,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (!string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "File is already uploaded.");
+                await OutputWindowHelper.LogErrorAsync("File is already uploaded.");
                 return;
             }
             try
@@ -154,7 +154,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
         #endregion

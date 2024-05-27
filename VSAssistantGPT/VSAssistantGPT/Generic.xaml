@@ -2,6 +2,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:cpGames.VSA">
+    
+    <!-- Converters -->
+    <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    <local:BoolToVisibilityInvConverter x:Key="BoolToVisibilityInvConverter" />
+    <local:BoolToInvBoolConverter x:Key="BoolToInvBoolConverter" />
+    <!-- Converters -->
+
     <!-- Flat ComboBox -->
     <SolidColorBrush x:Key="ComboBoxNormalBorderBrush" Color="Transparent" />
     <SolidColorBrush x:Key="ComboBoxNormalBackgroundBrush" Color="Transparent" />
@@ -171,7 +178,7 @@
 
     <local:ImagePathConverter x:Key="ImagePathConverter" />
 
-    <!-- Default Button -->
+    <!-- Default Image Button -->
     <Style x:Key="ImageButtonStyle" TargetType="Button">
         <Setter Property="Template">
             <Setter.Value>
@@ -207,58 +214,9 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="IsEnabled" Value="{Binding Source={x:Static local:ProjectUtils.ActiveProject}, Path=NotWorking, UpdateSourceTrigger=PropertyChanged}"/>
+        <Setter Property="IsEnabled" Value="{Binding Source={x:Static local:ProjectUtils.ActiveProject}, Path=Working, Converter={StaticResource BoolToInvBoolConverter}}"/>
     </Style>
-    <!-- Default Button -->
-
-    <!-- Save Button -->
-    <Style x:Key="ImageSaveButtonStyle" TargetType="Button">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Grid Width="16" Height="16" Margin="2">
-                        <!-- White Tint Border -->
-                        <Border x:Name="whiteTint" Background="White" Opacity="1">
-                            <Border.OpacityMask>
-                                <ImageBrush ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}"/>
-                            </Border.OpacityMask>
-                        </Border>
-                        <!-- Yellow Tint Border (hidden by default, shown when Modified) -->
-                        <Border x:Name="yellowTint" Background="#FFFFFF00" Visibility="Hidden">
-                            <Border.OpacityMask>
-                                <ImageBrush ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}"/>
-                            </Border.OpacityMask>
-                        </Border>
-                        <!-- Blue Tint Border (hidden by default) -->
-                        <Border x:Name="blueTint" Background="#FFAAAAFF" Visibility="Hidden">
-                            <Border.OpacityMask>
-                                <ImageBrush ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}"/>
-                            </Border.OpacityMask>
-                        </Border>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsEnabled" Value="True">
-                            <Setter TargetName="whiteTint" Property="Opacity" Value="1"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="whiteTint" Property="Opacity" Value="0.5"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="blueTint" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="False">
-                            <Setter TargetName="blueTint" Property="Visibility" Value="Hidden"/>
-                        </Trigger>
-                        <DataTrigger Binding="{Binding Modified}" Value="True">
-                            <Setter TargetName="yellowTint" Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Setter Property="IsEnabled" Value="{Binding Source={x:Static local:ProjectUtils.ActiveProject}, Path=NotWorking, UpdateSourceTrigger=PropertyChanged}"/>
-    </Style>
-    <!-- Save Button -->
+    <!-- Default Image Button -->
 
     <!-- Default TabControl -->
     <Style TargetType="TabControl">

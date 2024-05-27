@@ -109,7 +109,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -117,7 +117,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                await OutputWindowHelper.LogErrorAsync("Thread has not been created.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -133,7 +133,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
                 return;
             }
             RemoveAction?.Invoke();
@@ -156,7 +156,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
                 return;
             }
             await UpdateMessagesAsync();
@@ -167,7 +167,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                await OutputWindowHelper.LogErrorAsync("Thread has not been created.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -198,7 +198,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -206,12 +206,12 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been created.");
+                await OutputWindowHelper.LogErrorAsync("Thread has not been created.");
                 return;
             }
             if (Assistant == null)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Assistant has not been set.");
+                await OutputWindowHelper.LogErrorAsync("Assistant has not been set.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())

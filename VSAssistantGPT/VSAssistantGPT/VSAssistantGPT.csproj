@@ -60,6 +60,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="RestAPI\ListModelsRequest.cs" />
     <Compile Include="VSAPI\Glyph\TextViewConnectionListener.cs" />
     <Compile Include="VSAPI\Glyph\VSATag.cs" />
     <Compile Include="VSAPI\Glyph\VSATagger.cs" />
@@ -162,6 +163,14 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\python\GetActiveDocumentPath.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\ToolsLogger.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

@@ -57,6 +57,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="1"
@@ -64,6 +65,10 @@
                             Tag="plus"
                             Click="AddToolClicked" />
                     <Button Grid.Column="2"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="refresh"
+                            Click="ReloadToolsClicked" />
+                    <Button Grid.Column="3"
                             Style="{StaticResource ImageButtonStyle}"
                             Tag="open"
                             Click="OpenToolsClicked" />
@@ -175,9 +180,10 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="1"
-                            Style="{StaticResource ImageSaveButtonStyle}"
+                            Style="{StaticResource ImageButtonStyle}"
                             Tag="save"
-                            Click="SaveProjectClicked" />
+                            Click="SaveProjectClicked"
+                            Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </Grid>
                 <Label Content="API Key:" />
                 <TextBox
@@ -228,6 +234,7 @@
                     <Button Content="Has Document" Click="TestHasDocumentClick" />
                     <Button Content="List Documents" Click="TestListDocumentsClick" />
                     <Button Content="Get Errors" Click="TestGetErrorsClick" />
+                    <Button Content="Get Project Path" Click="TestGetProjectPathClick" />
                 </StackPanel>
             </ScrollViewer>
         </TabItem>

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using cpGames.VSA.RestAPI;
 using cpGames.VSA.ViewModel;
 
 namespace cpGames.VSA.Wpf
@@ -181,5 +182,59 @@ namespace cpGames.VSA.Wpf
             contextMenu.IsOpen = true;
         }
         #endregion
+
+        private async void SelectModelClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null)
+            {
+                return;
+            }
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            var listModelsRequest = new ListModelsRequest();
+            var listModelsResponse = await listModelsRequest.SendAsync();
+            var resourceDictionary = new ResourceDictionary
+            {
+                Source = new Uri("/VSA;component/generic.xaml", UriKind.RelativeOrAbsolute)
+            };
+            var menuTemplate = resourceDictionary["SimpleMenuTemplate"] as ControlTemplate;
+            if (menuTemplate == null)
+            {
+                return;
+            }
+            var itemTemplate = resourceDictionary["SimpleMenuItemTemplate"] as ControlTemplate;
+            if (itemTemplate == null)
+            {
+                return;
+            }
+            var contextMenu = new ContextMenu
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Template = menuTemplate
+            };
+            foreach (var model in listModelsResponse.data)
+            {
+                var id = model.id.ToString();
+                if (!id.Contains("gpt"))
+                {
+                    continue;
+                }
+                var menuItem = new MenuItem
+                {
+                    Header = id,
+                    Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                    Template = itemTemplate
+                };
+                menuItem.Click += (s, a) =>
+                {
+                    ViewModel.GPTModel = id;
+                };
+                contextMenu.Items.Add(menuItem);
+            }
+            contextMenu.IsOpen = true;
+        }
     }
 }

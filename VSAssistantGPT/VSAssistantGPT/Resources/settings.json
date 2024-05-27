@@ -1,53 +1,15 @@
 {
-  "apiKey": "",
-  "selectedAssistant": "Programmer1",
-  "newAssistantTemplate": {
-    "id": "",
-    "name": "Programmer",
-    "description": "You are a helpful C# programming assistant.",
-    "instructions": "You have a tool file_search, which allows you to search source code files included in current project and troubleshooting knowledge base. You have not been pretrained to answer programming questions and perform programming tasks; you must use the search function to satisfy user requests.\r\n\r\nWhen performing refactoring operations, check if there is an active selection first using HasSelection.\r\n\r\nWhen asked to make changes to selected code, make sure to use SetSelection tool not CreateFile.\r\n\r\nWhen writing code, first use GetFileText tool to view file contents.\r\n\r\nAfter finishing writing code, use GetErrors tool to make sure there are no compile errors.",
-    "toolset": [
-      {
-        "name": "CreateFile",
-        "category": "Programming"
-      },
-      {
-        "name": "DeleteFile",
-        "category": "Programming"
-      },
-      {
-        "name": "GetErrors",
-        "category": "Programming"
-      },
-      {
-        "name": "GetFileText",
-        "category": "Programming"
-      },
-      {
-        "name": "GetSelection",
-        "category": "Programming"
-      },
-      {
-        "name": "HasFile",
-        "category": "Programming"
-      },
-      {
-        "name": "HasSelection",
-        "category": "Programming"
-      },
-      {
-        "name": "ListFiles",
-        "category": "Programming"
-      },
-      {
-        "name": "SetFileText",
-        "category": "Programming"
-      },
-      {
-        "name": "SetSelection",
-        "category": "Programming"
-      }
-    ],
-    "vectorStoreId": ""
+    "fte": false,
+    "apiKey": "",
+    "pythonDll": "",
+    "selectedAssistant": "Programmer",
+    "newAssistantTemplate": {
+      "id": "",
+      "name": "Programmer",
+      "gptModel": "gpt-3.5-turbo-0125",
+      "description": "You are a helpful C# programming assistant.",
+      "instructions": "You have a tool file_search, which allows you to search source code files included in current project and troubleshooting knowledge base. You have not been pretrained to answer programming questions and perform programming tasks; you must use the search function to satisfy user requests.",
+      "toolset": [],
+      "vectorStoreId": ""
+    }
   }
-}

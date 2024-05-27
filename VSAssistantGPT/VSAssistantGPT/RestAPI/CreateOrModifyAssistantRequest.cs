@@ -26,7 +26,7 @@ namespace cpGames.VSA.RestAPI
             _assistantId = assistantModel.id;
             var assistantObject = new JObject
             {
-                { "model", "gpt-3.5-turbo-0125" },
+                { "model", assistantModel.gptModel },
                 { "name", assistantModel.name },
                 { "instructions", assistantModel.instructions },
                 { "description", assistantModel.description }

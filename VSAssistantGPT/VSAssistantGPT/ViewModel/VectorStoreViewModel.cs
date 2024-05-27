@@ -48,7 +48,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
             CreateAction?.Invoke();
         }
@@ -57,7 +57,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Vector store is not loaded.");
+                await OutputWindowHelper.LogErrorAsync("Vector store is not loaded.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -71,7 +71,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
             RemoveAction?.Invoke();
         }
@@ -80,7 +80,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Vector store is not loaded.");
+                await OutputWindowHelper.LogErrorAsync("Vector store is not loaded.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -114,7 +114,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -122,7 +122,7 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(Id))
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Vector store is not loaded.");
+                await OutputWindowHelper.LogErrorAsync("Vector store is not loaded.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -176,7 +176,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
         #endregion

@@ -63,7 +63,7 @@ namespace cpGames.VSA
             }
             catch (Exception ex)
             {
-                OutputWindowHelper.LogError("Error", ex.Message);
+                OutputWindowHelper.LogError(ex);
             }
             return false;
         }
@@ -82,7 +82,7 @@ namespace cpGames.VSA
 
         private static string GetResponseError(string error)
         {
-            OutputWindowHelper.LogError("Tool Error", error);
+            OutputWindowHelper.LogError(error);
             JToken response = new JObject
             {
                 ["success"] = false,
@@ -102,7 +102,7 @@ namespace cpGames.VSA
             var toolNameStr = toolName.ToString();
             var arguments = toolCall["arguments"];
 
-            var argumentsDict = arguments != null ?
+            var argumentsDict = (arguments != null && arguments.ToString() != "[]") ?
                 JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(arguments.ToString()) :
                 new Dictionary<string, dynamic>();
             if (argumentsDict == null)
@@ -198,12 +198,32 @@ namespace cpGames.VSA
             }
         }
 
+        public static string OpenTool(string toolName)
+        {
+            using (Py.GIL())
+            {
+                dynamic tools = Py.Import("AssistantTools");
+                var response = tools.open_tool(toolName).ToString();
+                return response;
+            }
+        }
+
         public static string RemoveTool(string toolName)
         {
             using (Py.GIL())
             {
                 dynamic tools = Py.Import("AssistantTools");
                 var response = tools.remove_tool(toolName).ToString();
+                return response;
+            }
+        }
+
+        public static string ReloadTools()
+        {
+            using (Py.GIL())
+            {
+                dynamic tools = Py.Import("AssistantTools");
+                var response = tools.reload_tools().ToString();
                 return response;
             }
         }
@@ -417,6 +437,17 @@ namespace cpGames.VSA
         public static JArray GetErrors(Dictionary<string, dynamic> arguments)
         {
             return DTEUtils.GetErrors();
+        }
+
+        public static JObject GetProjectPath(Dictionary<string, dynamic> arguments)
+        {
+            var projectPath = DTEUtils.GetProjectPath();
+            var result = new JObject
+            {
+                ["result"] = "success",
+                ["projectPath"] = projectPath
+            };
+            return result;
         }
         #endregion
     }

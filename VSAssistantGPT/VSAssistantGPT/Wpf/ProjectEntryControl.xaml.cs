@@ -33,7 +33,9 @@ namespace cpGames.VSA.Wpf
             InitializeComponent();
             Loaded += OnLoaded;
         }
+        #endregion
 
+        #region Events
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             // on FTE open Settings tab
@@ -267,6 +269,11 @@ namespace cpGames.VSA.Wpf
                 ViewModel.PythonDll = openFileDialog.FileName;
             }
         }
+
+        private void ReloadToolsClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ReloadToolset();
+        }
         #endregion
 
         #region Testing
@@ -397,7 +404,12 @@ namespace cpGames.VSA.Wpf
             var result = ToolAPI.GetErrors(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
-        #endregion
 
+        private void TestGetProjectPathClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetProjectPath(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+        #endregion
     }
 }

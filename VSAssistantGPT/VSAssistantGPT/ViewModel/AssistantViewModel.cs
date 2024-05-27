@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using cpGames.VSA.RestAPI;
 
 namespace cpGames.VSA.ViewModel
@@ -12,7 +11,6 @@ namespace cpGames.VSA.ViewModel
         #region Fields
         private bool _modified;
         private bool _isTemplate;
-        private Visibility _templateVisibility = Visibility.Visible;
         #endregion
 
         #region Properties
@@ -53,6 +51,20 @@ namespace cpGames.VSA.ViewModel
                 if (_model.name != value)
                 {
                     _model.name = value;
+                    OnPropertyChanged();
+                    Modified = true;
+                }
+            }
+        }
+
+        public string GPTModel
+        {
+            get => _model.gptModel;
+            set
+            {
+                if (_model.gptModel != value)
+                {
+                    _model.gptModel = value;
                     OnPropertyChanged();
                     Modified = true;
                 }
@@ -110,20 +122,6 @@ namespace cpGames.VSA.ViewModel
                 {
                     _isTemplate = value;
                     OnPropertyChanged();
-                    TemplateVisibility = value ? Visibility.Collapsed : Visibility.Visible;
-                }
-            }
-        }
-
-        public Visibility TemplateVisibility
-        {
-            get => _templateVisibility;
-            set
-            {
-                if (_templateVisibility != value)
-                {
-                    _templateVisibility = value;
-                    OnPropertyChanged();
                 }
             }
         }
@@ -169,7 +167,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
             CreateAction?.Invoke();
         }
@@ -189,7 +187,7 @@ namespace cpGames.VSA.ViewModel
                 }
                 catch (Exception e)
                 {
-                    await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                    await OutputWindowHelper.LogErrorAsync(e);
                 }
             }
             RemoveAction?.Invoke();

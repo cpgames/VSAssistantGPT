@@ -79,12 +79,12 @@ namespace cpGames.VSA.ViewModel
         {
             if (Thread == null)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Thread has not been set.");
+                await OutputWindowHelper.LogErrorAsync("Thread has not been set.");
                 return;
             }
             if (Assistant == null)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", "Assistant has not been set.");
+                await OutputWindowHelper.LogErrorAsync("Assistant has not been set.");
                 return;
             }
             if (!ProjectUtils.ActiveProject.ValidateSettings())
@@ -106,7 +106,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
             RunEnded?.Invoke();
         }

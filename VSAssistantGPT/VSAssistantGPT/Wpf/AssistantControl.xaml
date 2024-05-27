@@ -22,22 +22,34 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
-                <Button Grid.Column="2"
-                        Style="{StaticResource ImageSaveButtonStyle}"
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="{Binding IsTemplate, Converter={StaticResource BoolToVisibilityInvConverter}}">
+                    <Button
+                        Style="{StaticResource ImageButtonStyle}"
                         Tag="save"
                         Click="SaveAssistantClicked"
-                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Grid.Column="3"
+                        Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <Button
                         Style="{StaticResource ImageButtonStyle}"
                         Tag="delete"
-                        Click="RemoveAssistantClicked"
-                        Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}"/>
+                        Click="RemoveAssistantClicked" />
+                </StackPanel>
             </Grid>
             <TextBox
                 Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='Assistant Name'}" />
+            <Label Content="GPT Model:" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox
+                    Text="{Binding GPTModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='gpt-3.5-turbo-0125'}" />
+                <Button Grid.Column="1" Content="..." Foreground="White"
+                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="SelectModelClicked" Height="20" />
+            </Grid>
             <Label Content="Description:" />
             <TextBox
                 Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='Assistant Description'}"
@@ -56,7 +68,7 @@
                 <Button Grid.Column="2"
                         Style="{StaticResource ImageButtonStyle}"
                         Tag="plus"
-                        Click="AddToolClicked"/>
+                        Click="AddToolClicked" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Toolset}">
                 <ItemsControl.ItemsPanel>

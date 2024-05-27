@@ -35,5 +35,10 @@ namespace cpGames.VSA.Wpf
             ViewModel?.Save();
         }
         #endregion
+
+        private void OpenToolClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel?.Open();
+        }
     }
 }

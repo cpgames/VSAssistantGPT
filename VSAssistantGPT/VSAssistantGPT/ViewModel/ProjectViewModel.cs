@@ -11,9 +11,8 @@ namespace cpGames.VSA.ViewModel
     public class ProjectViewModel : ViewModel<ProjectModel>
     {
         #region Fields
-        private bool _modified  ;
-        private bool _working  ;
-        private bool _notWorking = true;
+        private bool _modified;
+        private bool _working;
         private readonly AssistantViewModel _newAssistantTemplateViewModel;
         #endregion
 
@@ -72,7 +71,7 @@ namespace cpGames.VSA.ViewModel
                 }
             }
         }
-        
+
         public string SelectedAssistant
         {
             get => _model.selectedAssistant;
@@ -95,20 +94,6 @@ namespace cpGames.VSA.ViewModel
                 if (_working != value)
                 {
                     _working = value;
-                    OnPropertyChanged();
-                    NotWorking = !value;
-                }
-            }
-        }
-
-        public bool NotWorking
-        {
-            get => _notWorking;
-            set
-            {
-                if (_notWorking != value)
-                {
-                    _notWorking = value;
                     OnPropertyChanged();
                 }
             }
@@ -145,7 +130,8 @@ namespace cpGames.VSA.ViewModel
         {
             _newAssistantTemplateViewModel = new AssistantViewModel(_model.newAssistantTemplate)
             {
-                IsTemplate = true
+                IsTemplate = true,
+                Modified = false
             };
             _newAssistantTemplateViewModel.PropertyChanged += (sender, args) =>
             {
@@ -195,7 +181,7 @@ namespace cpGames.VSA.ViewModel
                 }
             }
             var toolName = "NewTool";
-            int index = 1;
+            var index = 1;
             while (Toolset.Any(t => t.Name == toolName))
             {
                 toolName = $"NewTool{index++}";
@@ -236,11 +222,13 @@ namespace cpGames.VSA.ViewModel
             try
             {
                 ProjectUtils.SaveProject();
+                _newAssistantTemplateViewModel.Modified = false;
+                Modified = false;
                 OutputWindowHelper.LogInfo("Info", "Settings saved.");
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError("Error", e.Message);
+                OutputWindowHelper.LogError(e);
             }
         }
 
@@ -267,6 +255,7 @@ namespace cpGames.VSA.ViewModel
                     {
                         id = assistant["id"]!.ToString(),
                         name = assistant["name"]!.ToString(),
+                        gptModel = assistant["model"]!.ToString(),
                         description = assistant["description"]!.ToString(),
                         instructions = assistant["instructions"]!.ToString()
                     };
@@ -300,7 +289,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -345,10 +334,28 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError("Error", e.Message);
+                OutputWindowHelper.LogError(e);
                 return false;
             }
             return true;
+        }
+
+        public void ReloadToolset()
+        {
+            if (!ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                ToolAPI.ReloadTools();
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError(e);
+                return;
+            }
+            LoadToolset();
         }
 
         public async Task LoadFilesAsync()
@@ -375,7 +382,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -402,7 +409,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                await OutputWindowHelper.LogErrorAsync("Error", e.Message);
+                await OutputWindowHelper.LogErrorAsync(e);
             }
         }
 
@@ -438,12 +445,12 @@ namespace cpGames.VSA.ViewModel
         {
             if (string.IsNullOrEmpty(ApiKey))
             {
-                OutputWindowHelper.LogError("Error", "API key missing.");
+                OutputWindowHelper.LogError("API key missing.");
                 return false;
             }
             if (string.IsNullOrEmpty(PythonDll))
             {
-                OutputWindowHelper.LogError("Error", "Python DLL missing.");
+                OutputWindowHelper.LogError("Python DLL missing.");
                 return false;
             }
             return true;

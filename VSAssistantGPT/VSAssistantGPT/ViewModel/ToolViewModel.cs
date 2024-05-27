@@ -88,7 +88,7 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError("Error", e.Message);
+                OutputWindowHelper.LogError(e);
             }
             RemoveAction?.Invoke();
         }
@@ -111,9 +111,27 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError("Error", e.Message);
+                OutputWindowHelper.LogError(e);
+                return;
             }
+            ProjectUtils.ActiveProject.ReloadToolset();
             Modified = false;
+        }
+
+        public void Open()
+        {
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                ToolAPI.OpenTool(Name);
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError(e);
+            }
         }
         #endregion
     }
