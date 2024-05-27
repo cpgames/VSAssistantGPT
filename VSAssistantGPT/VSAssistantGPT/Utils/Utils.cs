@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Windows.Data;
 using PCRE;
 
 namespace cpGames.VSA
@@ -33,14 +35,6 @@ namespace cpGames.VSA
             return Directory.GetFiles(folderPath, $"*{extension}");
         }
 
-        public static string GetRelativePath(string filePath, string folderPath)
-        {
-            var fileUri = new Uri(filePath);
-            var folderUri = new Uri(folderPath);
-            var relativeUri = folderUri.MakeRelativeUri(fileUri);
-            return Uri.UnescapeDataString(relativeUri.ToString().Replace('/', Path.DirectorySeparatorChar));
-        }
-
         public static void OpenInExplorer(string path)
         {
             if (Directory.Exists(path) || File.Exists(path))
@@ -56,5 +50,58 @@ namespace cpGames.VSA
                 PcreRegex.IsMatch(str, pattern);
         }
         #endregion
+    }
+
+    public class ImagePathConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            string imageName = (string)value!;
+            return $"pack://application:,,,/VSA;component/Resources/icons/{imageName}.png";
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class BoolToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return (bool)value! ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return (System.Windows.Visibility)value! == System.Windows.Visibility.Visible;
+        }
+    }
+
+    public class BoolToVisibilityInvConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return (bool)value! ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return (System.Windows.Visibility)value! == System.Windows.Visibility.Collapsed;
+        }
+    }
+
+    public class BoolToInvBoolConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return !(bool)value!;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            return !(bool)value!;
+        }
     }
 }

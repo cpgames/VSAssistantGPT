@@ -60,23 +60,22 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Commands\ShowHelperCommand.cs" />
-    <Compile Include="Glyph\TextViewConnectionListener.cs" />
-    <Compile Include="Glyph\VSATag.cs" />
-    <Compile Include="Glyph\VSATagger.cs" />
-    <Compile Include="Glyph\VSATaggerProvider.cs" />
-    <Compile Include="Glyph\VSAGlyphFactory.cs" />
-    <Compile Include="Glyph\VSAGlyphFactoryProvider.cs" />
+    <Compile Include="RestAPI\ListModelsRequest.cs" />
+    <Compile Include="VSAPI\Glyph\TextViewConnectionListener.cs" />
+    <Compile Include="VSAPI\Glyph\VSATag.cs" />
+    <Compile Include="VSAPI\Glyph\VSATagger.cs" />
+    <Compile Include="VSAPI\Glyph\VSATaggerProvider.cs" />
+    <Compile Include="VSAPI\Glyph\VSAGlyphFactory.cs" />
+    <Compile Include="VSAPI\Glyph\VSAGlyphFactoryProvider.cs" />
     <Compile Include="Model\VectorStoreModel.cs" />
     <Compile Include="Model\FileModel.cs" />
     <Compile Include="Model\ProjectModel.cs" />
-    <Compile Include="Model\TaskModel.cs" />
     <Compile Include="Model\ToolEntryModel.cs" />
     <Compile Include="Model\ToolModel.cs" />
     <Compile Include="Model\MessageModel.cs" />
     <Compile Include="RestAPI\ListThreadsRequest.cs" />
     <Compile Include="RestAPI\ListMessagesRequest.cs" />
-    <Compile Include="ToolAPI.cs" />
+    <Compile Include="VSAPI\ToolAPI.cs" />
     <Compile Include="ViewModel\AssistantViewModel.cs" />
     <Compile Include="OptionsPage.cs">
       <SubType>Component</SubType>
@@ -123,7 +122,6 @@
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="ViewModel\MessageViewModel.cs" />
     <Compile Include="ViewModel\RunViewModel.cs" />
-    <Compile Include="ViewModel\TaskViewModel.cs" />
     <Compile Include="ViewModel\ProjectViewModel.cs" />
     <Compile Include="ViewModel\ThreadViewModel.cs" />
     <Compile Include="ViewModel\ViewModel.cs" />
@@ -165,6 +163,30 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\icons\icon.ico">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\icons\Icon16.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\icons\Icon32.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\python\GetActiveDocumentPath.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\ToolsLogger.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
       <Generator>VsixManifestGenerator</Generator>
@@ -219,11 +241,33 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\python\CreateFile.py">
+    <Resource Include="Resources\icons\Move.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Content Include="PropertyTools.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PropertyTools.Wpf.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Resource Include="Resources\icons\Open.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Content Include="Resources\python\CloseDocument.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\python\DeleteFile.py">
+    <Content Include="Resources\python\CreateDocument.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\DeleteDocument.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\GetActiveDocumentText.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -231,15 +275,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\python\GetFiles.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Resources\python\GetFileText.py">
+    <Content Include="Resources\python\GetDocumentText.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Resources\python\HasFile.py">
+    <Content Include="Resources\python\HasDocument.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -247,7 +287,19 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Resources\python\SetFileText.py">
+    <Content Include="Resources\python\ListDocuments.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\OpenDocument.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\SetActiveDocumentText.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\python\SetDocumentText.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -294,10 +346,6 @@
     <Resource Include="Resources\icons\Delete.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Content Include="Resources\icons\Icon.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Resource Include="Resources\icons\Log.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
@@ -316,10 +364,6 @@
     <Resource Include="Resources\icons\Point.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Content Include="Resources\icons\Preview.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Resource Include="Resources\icons\Save.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>

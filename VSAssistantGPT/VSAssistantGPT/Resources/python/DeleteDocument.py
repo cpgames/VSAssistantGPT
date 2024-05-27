@@ -1,14 +1,14 @@
-# SetFileText.py
+# DeleteDocument.py
 
 import json
 from ToolBase import *
 
-class SetFileText(ToolBase):
-    name = "SetFileText"
-    description = "Sets text to file."
+class DeleteDocument(ToolBase):
+    name = "DeleteDocument"
+    description = "Delete a document."
     category = "Programming"
     arguments = [
-            Argument("text", "string", "Text to replace contents of the file with."),
+            Argument("relative_path", "string", "Relative path of the document."),
         ]
     
     def call(self, function, tool_callback):

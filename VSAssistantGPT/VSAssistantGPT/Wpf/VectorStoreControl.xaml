@@ -15,51 +15,42 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Border BorderBrush="White" BorderThickness="1">
-    <Expander Header="{Binding Id, FallbackValue='VS_ID'}" IsExpanded="False" Expanded="VectorStoreExpanded">
-        <StackPanel>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <CheckBox Grid.Column="0" Margin="5,0,5,0"
-                          Checked="SelectAllVectorStoresChecked" Unchecked="SelectAllVectorStoresUnchecked" />
-                <Button Grid.Column="2" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="LoadFilesClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/refresh.png"
-                               Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
-                <Button Grid.Column="3" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SyncFilesClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/sync.png"
-                               Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
-                <Button Grid.Column="4" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="DeleteClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                               Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
-            </Grid>
+        <Expander Header="{Binding Id, FallbackValue='VS_ID'}" IsExpanded="False" Expanded="VectorStoreExpanded">
             <StackPanel>
-                <ItemsControl ItemsSource="{Binding Files, UpdateSourceTrigger=PropertyChanged}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type viewModel:FileViewModel}">
-                            <local:FileEntryControl />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Column="0" Margin="5,0,5,0"
+                              Checked="SelectAllVectorStoresChecked" Unchecked="SelectAllVectorStoresUnchecked" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="refresh"
+                            Click="LoadFilesClicked" />
+                    <Button Grid.Column="3"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="sync"
+                            Click="SyncFilesClicked" />
+                    <Button Grid.Column="4"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="delete"
+                            Click="DeleteClicked" />
+                </Grid>
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Files, UpdateSourceTrigger=PropertyChanged}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type viewModel:FileViewModel}">
+                                <local:FileEntryControl />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
-    </Expander>
+        </Expander>
     </Border>
 </UserControl>

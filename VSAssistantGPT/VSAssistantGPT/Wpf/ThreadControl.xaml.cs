@@ -62,7 +62,11 @@ namespace cpGames.VSA.Wpf
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    ex.Message,
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 SubmitButton.IsEnabled = true;
                 MessageText.Text = text;
             }
@@ -87,7 +91,7 @@ namespace cpGames.VSA.Wpf
 
         private async void SelectAssistantClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null || ProjectUtils.ActiveProject == null)
+            if (ViewModel == null)
             {
                 return;
             }
@@ -130,6 +134,19 @@ namespace cpGames.VSA.Wpf
                 contextMenu.Items.Add(menuItem);
             }
             contextMenu.IsOpen = true;
+        }
+
+        private async void RefreshThreadClicked(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel == null)
+            {
+                return;
+            }
+            if (!string.IsNullOrEmpty(ViewModel.Id))
+            {
+                await ViewModel.DeleteAsync();
+            }
+            await ViewModel.CreateAsync();
         }
         #endregion
     }

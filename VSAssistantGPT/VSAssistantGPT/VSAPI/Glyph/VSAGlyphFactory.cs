@@ -49,10 +49,6 @@ namespace cpGames.VSA
 
         private void ShowVSAInput(Point position)
         {
-            if (ProjectUtils.ActiveProject == null)
-            {
-                return;
-            }
             var dialog = new DialogWindow();
             var helperControl = new HelperControl(dialog)
             {

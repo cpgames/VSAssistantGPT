@@ -15,11 +15,8 @@ namespace cpGames.VSA
         public const string VSAGuidString = "cb8cf9fb-11eb-4b63-aba2-6133d16f82f0";
         public static Guid VSAGuid = new Guid(VSAGuidString);
 
-        public const string GuidLogoString = "4946c84e-c4c9-45db-b1f7-ea362214b738";
-        public static Guid GuidLogo = new Guid(GuidLogoString);
-
-        public const string GuidPreviewString = "786dc029-63fa-444a-8255-7f3ade06bacf";
-        public static Guid GuidPreview = new Guid(GuidPreviewString);
+        public const string GuidIconString = "64671dd8-4e7c-4db4-86a5-5c16e9845b15";
+        public static Guid GuidIcon = new Guid(GuidIconString);
     }
     /// <summary>
     /// Helper class that encapsulates all CommandIDs uses across VS Package.
@@ -28,8 +25,6 @@ namespace cpGames.VSA
     {
         public const int MyMenuGroup = 0x1020;
         public const int ShowVSACommand = 0x0100;
-        public const int ShowHelperCommand = 0x0200;
-        public const int Logo = 0x0001;
-        public const int Preview = 0x0001;
+        public const int Icon = 0x0001;
     }
 }

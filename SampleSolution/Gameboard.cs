@@ -1,13 +1,6 @@
-using System;
-
 namespace TicTacToeGame
 {
-    public interface IGameboard
-    {
-        void DisplayBoard();
-    }
-
-    public class Gameboard : IGameboard
+    public class Gameboard : IGameBoard
     {
         private char[,] board;
         private int size;
@@ -19,7 +12,7 @@ namespace TicTacToeGame
             InitializeBoard();
         }
 
-        private void InitializeBoard()
+        public void InitializeBoard()
         {
             for (int i = 0; i < size; i++)
             {
@@ -52,6 +45,12 @@ namespace TicTacToeGame
                     Console.WriteLine();
                 }
             }
+        }
+
+        // Implementation of the missing method
+        public int GetBoardSize()
+        {
+            return size;
         }
     }
 }

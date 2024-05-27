@@ -1,6 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using cpGames.VSA.RestAPI;
 using Newtonsoft.Json.Linq;
 
@@ -9,47 +11,35 @@ namespace cpGames.VSA.ViewModel
     public class ProjectViewModel : ViewModel<ProjectModel>
     {
         #region Fields
-        private double _progress;
-        private string _vectorStoreId = "";
-        private string _vectorStoreLoaded = "Not Loaded";
+        private bool _modified;
+        private bool _working;
+        private readonly AssistantViewModel _newAssistantTemplateViewModel;
         #endregion
 
         #region Properties
-        public string Name
+        public bool FTE
         {
-            get => _model.name;
+            get => _model.fte;
             set
             {
-                if (_model.name != value)
+                if (_model.fte != value)
                 {
-                    _model.name = value;
+                    _model.fte = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        public string Description
+        public bool Modified
         {
-            get => _model.description;
+            get => _modified;
             set
             {
-                if (_model.description != value)
+                if (_modified != value)
                 {
-                    _model.description = value;
+                    _modified = value;
                     OnPropertyChanged();
-                }
-            }
-        }
-
-        public string Team
-        {
-            get => _model.team;
-            set
-            {
-                if (_model.team != value)
-                {
-                    _model.team = value;
-                    OnPropertyChanged();
+                    FTE = false;
                 }
             }
         }
@@ -63,9 +53,25 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.apiKey = value;
                     OnPropertyChanged();
+                    Modified = true;
                 }
             }
         }
+
+        public string PythonDll
+        {
+            get => _model.pythonDll;
+            set
+            {
+                if (_model.pythonDll != value)
+                {
+                    _model.pythonDll = value;
+                    OnPropertyChanged();
+                    Modified = true;
+                }
+            }
+        }
+
         public string SelectedAssistant
         {
             get => _model.selectedAssistant;
@@ -75,53 +81,40 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.selectedAssistant = value;
                     OnPropertyChanged();
+                    Modified = true;
                 }
             }
         }
 
-        public double Progress
+        public bool Working
         {
-            get => _progress;
+            get => _working;
             set
             {
-                if (_progress != value)
+                if (_working != value)
                 {
-                    _progress = value;
+                    _working = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        public string VectorStoreId
+        // hide testing features in release mode
+        public Visibility IsTestingVisible
         {
-            get => _vectorStoreId;
-            set
+            get
             {
-                if (_vectorStoreId != value)
-                {
-                    _vectorStoreId = value;
-                    OnPropertyChanged();
-                    VectorStoreLoaded = string.IsNullOrEmpty(_vectorStoreId) ? "Not Loaded" : "Loaded";
-                }
+#if DEBUG
+                return Visibility.Visible;
+#else
+                return Visibility.Collapsed;
+#endif
             }
         }
-
-        public string VectorStoreLoaded
-        {
-            get => _vectorStoreLoaded;
-            set
-            {
-                if (_vectorStoreLoaded != value)
-                {
-                    _vectorStoreLoaded = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public ObservableCollection<TaskViewModel> Tasks { get; } = new();
 
         public ThreadViewModel Thread { get; } = new(new ThreadModel());
+
+        public AssistantViewModel NewAssistantTemplateViewModel => _newAssistantTemplateViewModel;
 
         public ObservableCollection<AssistantViewModel> Assistants { get; } = new();
 
@@ -135,47 +128,34 @@ namespace cpGames.VSA.ViewModel
         #region Constructors
         public ProjectViewModel(ProjectModel projectModel) : base(projectModel)
         {
-            foreach (var taskModel in _model.tasks)
+            _newAssistantTemplateViewModel = new AssistantViewModel(_model.newAssistantTemplate)
             {
-                var taskViewModel = new TaskViewModel(taskModel);
-                Tasks.Add(taskViewModel);
-                taskViewModel.RemoveAction += () =>
+                IsTemplate = true,
+                Modified = false
+            };
+            _newAssistantTemplateViewModel.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == nameof(AssistantViewModel.Modified))
                 {
-                    _model.tasks.Remove(taskModel);
-                    Tasks.Remove(taskViewModel);
-                };
-            }
+                    Modified |= _newAssistantTemplateViewModel.Modified;
+                }
+            };
         }
         #endregion
 
         #region Methods
-        public void AddTask(TaskModel task)
-        {
-            _model.tasks.Add(task);
-            var taskViewModel = new TaskViewModel(task);
-            Tasks.Add(taskViewModel);
-            taskViewModel.RemoveAction += () =>
-            {
-                _model.tasks.Remove(task);
-                Tasks.Remove(taskViewModel);
-            };
-        }
-
         public void AddAssistant(AssistantModel assistant)
         {
-            _model.assistants.Add(assistant);
             var assistantViewModel = new AssistantViewModel(assistant);
             Assistants.Add(assistantViewModel);
             assistantViewModel.RemoveAction += () =>
             {
-                _model.assistants.Remove(assistant);
                 Assistants.Remove(assistantViewModel);
             };
         }
 
         public void AddTool(ToolModel tool, bool loaded)
         {
-            _model.toolset.Add(tool);
             var toolViewModel = new ToolViewModel(tool)
             {
                 Modified = !loaded
@@ -183,149 +163,263 @@ namespace cpGames.VSA.ViewModel
             Toolset.Add(toolViewModel);
             toolViewModel.RemoveAction += () =>
             {
-                _model.toolset.Remove(tool);
                 Toolset.Remove(toolViewModel);
             };
         }
 
+        public void CreateTool()
+        {
+            if (!ValidateSettings())
+            {
+                return;
+            }
+            if (Toolset.Count == 0)
+            {
+                if (!LoadToolset())
+                {
+                    return;
+                }
+            }
+            var toolName = "NewTool";
+            var index = 1;
+            while (Toolset.Any(t => t.Name == toolName))
+            {
+                toolName = $"NewTool{index++}";
+            }
+            var tool = new ToolModel
+            {
+                name = toolName,
+                description = "Write tool description (used by GPT)",
+                category = "Custom"
+            };
+            AddTool(tool, false);
+        }
+
         public FileViewModel AddFile(FileModel file)
         {
-            _model.files.Add(file);
             var fileViewModel = new FileViewModel(file);
             Files.Add(fileViewModel);
             fileViewModel.RemoveAction += () =>
             {
-                _model.files.Remove(file);
                 Files.Remove(fileViewModel);
             };
             return fileViewModel;
         }
 
-        public void AddVectorStore(VectorStoreModel vectorStore)
+        public VectorStoreViewModel AddVectorStore(VectorStoreModel vectorStore)
         {
-            _model.vectorStores.Add(vectorStore);
             var vectorStoreViewModel = new VectorStoreViewModel(vectorStore);
             VectorStores.Add(vectorStoreViewModel);
             vectorStoreViewModel.RemoveAction += () =>
             {
-                _model.vectorStores.Remove(vectorStore);
                 VectorStores.Remove(vectorStoreViewModel);
             };
+            return vectorStoreViewModel;
+        }
+
+        public async Task CreateVectorStoreAsync()
+        {
+            var vectorStore = new VectorStoreModel();
+            var vectorStoreViewModel = AddVectorStore(vectorStore);
+            await vectorStoreViewModel.CreateAsync();
         }
 
         public void Save()
         {
-            ProjectUtils.SaveProject(_model);
+            try
+            {
+                ProjectUtils.SaveProject();
+                _newAssistantTemplateViewModel.Modified = false;
+                Modified = false;
+                OutputWindowHelper.LogInfo("Info", "Settings saved.");
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError(e);
+            }
         }
-        
+
         public async Task LoadAssistantsAsync()
         {
+            if (!ValidateSettings())
+            {
+                return;
+            }
             if (Toolset.Count == 0)
             {
                 LoadToolset();
             }
-            Assistants.Clear();
-            var listAssistantsRequest = new ListAssistantsRequest();
-            var listAssistantsResponse = await listAssistantsRequest.SendAsync();
-            JArray data = listAssistantsResponse.data;
-            foreach (var assistant in data)
+
+            try
             {
-                var assistantModel = new AssistantModel
+                Assistants.Clear();
+                var listAssistantsRequest = new ListAssistantsRequest();
+                var listAssistantsResponse = await listAssistantsRequest.SendAsync();
+                JArray data = listAssistantsResponse.data;
+                foreach (var assistant in data)
                 {
-                    id = assistant["id"]!.ToString(),
-                    name = assistant["name"]!.ToString(),
-                    description = assistant["description"]!.ToString(),
-                    instructions = assistant["instructions"]!.ToString()
-                };
-                if (assistant["tools"] is JArray tools)
-                {
-                    foreach (var tool in tools)
+                    var assistantModel = new AssistantModel
                     {
-                        if (tool["type"]!.ToString() != "function")
+                        id = assistant["id"]!.ToString(),
+                        name = assistant["name"]!.ToString(),
+                        gptModel = assistant["model"]!.ToString(),
+                        description = assistant["description"]!.ToString(),
+                        instructions = assistant["instructions"]!.ToString()
+                    };
+                    if (assistant["tools"] is JArray tools)
+                    {
+                        foreach (var tool in tools)
                         {
-                            continue;
+                            if (tool["type"]!.ToString() != "function")
+                            {
+                                continue;
+                            }
+                            var toolName = tool["function"]!["name"]!.ToString();
+                            var toolModel = Toolset.FirstOrDefault(x => x.Name == toolName);
+                            var category = toolModel?.Category ?? "";
+                            var toolEntry = new ToolEntryModel
+                            {
+                                name = toolName,
+                                category = category
+                            };
+                            assistantModel.toolset.Add(toolEntry);
                         }
-                        var toolName = tool["function"]!["name"]!.ToString();
-                        var toolModel = Toolset.FirstOrDefault(x => x.Name == toolName);
-                        var category = toolModel?.Category ?? "";
-                        var toolEntry = new ToolEntryModel
-                        {
-                            name = toolName,
-                            category = category
-                        };
-                        assistantModel.toolset.Add(toolEntry);
                     }
+                    var toolResources = assistant["tool_resources"];
+                    var fileSearch = toolResources?["file_search"];
+                    if (fileSearch?["vector_store_ids"] is JArray { Count: > 0 } vectorStores)
+                    {
+                        assistantModel.vectorStoreId = vectorStores[0].ToString();
+                    }
+                    AddAssistant(assistantModel);
                 }
-                var toolResources = assistant["tool_resources"];
-                var fileSearch = toolResources?["file_search"];
-                if (fileSearch?["vector_store_ids"] is JArray { Count: > 0 } vectorStores)
-                {
-                    assistantModel.vectorStoreId = vectorStores[0].ToString();
-                }
-                AddAssistant(assistantModel);
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 
-        public void LoadToolset()
+        public bool LoadToolset()
         {
-            Toolset.Clear();
-            var toolset = JArray.Parse(ToolAPI.GetToolset());
-            foreach (var tool in toolset)
+            if (!ValidateSettings())
             {
-                var toolModel = new ToolModel
-                {
-                    name = tool["name"]!.ToString(),
-                    description = tool["description"]!.ToString(),
-                    category = tool["category"]!.ToString()
-                };
-                JArray arguments = tool["arguments"] as JArray;
-                if (arguments != null)
-                {
-                    foreach (var argument in arguments)
-                    {
-                        var argumentModel = new ToolModel.Argument
-                        {
-                            name = argument["name"]!.ToString(),
-                            type = argument["type"]!.ToString(),
-                            description = argument["description"]!.ToString()
-                        };
-                        toolModel.arguments.Add(argumentModel);
-                    }
-                }
-                AddTool(toolModel, true);
+                return false;
             }
+            try
+            {
+                Toolset.Clear();
+                if (!ToolAPI.GetToolset(out var toolsetJson))
+                {
+                    return false;
+                }
+                var toolset = JArray.Parse(toolsetJson!);
+                foreach (var tool in toolset)
+                {
+                    var toolModel = new ToolModel
+                    {
+                        name = tool["name"]!.ToString(),
+                        description = tool["description"]!.ToString(),
+                        category = tool["category"]!.ToString()
+                    };
+                    var arguments = tool["arguments"] as JArray;
+                    if (arguments != null)
+                    {
+                        foreach (var argument in arguments)
+                        {
+                            var argumentModel = new ToolModel.Argument
+                            {
+                                name = argument["name"]!.ToString(),
+                                type = argument["type"]!.ToString(),
+                                description = argument["description"]!.ToString()
+                            };
+                            toolModel.arguments.Add(argumentModel);
+                        }
+                    }
+                    AddTool(toolModel, true);
+                }
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError(e);
+                return false;
+            }
+            return true;
+        }
+
+        public void ReloadToolset()
+        {
+            if (!ValidateSettings())
+            {
+                return;
+            }
+            try
+            {
+                ToolAPI.ReloadTools();
+            }
+            catch (Exception e)
+            {
+                OutputWindowHelper.LogError(e);
+                return;
+            }
+            LoadToolset();
         }
 
         public async Task LoadFilesAsync()
         {
-            Files.Clear();
-            var listFilesRequest = new ListFilesRequest();
-            var listFilesResponse = await listFilesRequest.SendAsync();
-            JArray data = listFilesResponse.data;
-            foreach (var file in data)
+            if (!ValidateSettings())
             {
-                var fileModel = new FileModel
+                return;
+            }
+            try
+            {
+                Files.Clear();
+                var listFilesRequest = new ListFilesRequest();
+                var listFilesResponse = await listFilesRequest.SendAsync();
+                JArray data = listFilesResponse.data;
+                foreach (var file in data)
                 {
-                    id = file["id"]!.ToString(),
-                    name = file["filename"]!.ToString()
-                };
-                AddFile(fileModel);
+                    var fileModel = new FileModel
+                    {
+                        id = file["id"]!.ToString(),
+                        name = file["filename"]!.ToString()
+                    };
+                    AddFile(fileModel);
+                }
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 
         public async Task LoadVectorStoresAsync()
         {
-            VectorStores.Clear();
-            var listVectorStoresRequest = new ListVectorStoresRequest();
-            var listVectorStoresResponse = await listVectorStoresRequest.SendAsync();
-            JArray data = listVectorStoresResponse.data;
-            foreach (var vectorStore in data)
+            if (!ValidateSettings())
             {
-                var vectorStoreModel = new VectorStoreModel
+                return;
+            }
+            try
+            {
+                VectorStores.Clear();
+                var listVectorStoresRequest = new ListVectorStoresRequest();
+                var listVectorStoresResponse = await listVectorStoresRequest.SendAsync();
+                JArray data = listVectorStoresResponse.data;
+                foreach (var vectorStore in data)
                 {
-                    id = vectorStore["id"]!.ToString()
-                };
-                AddVectorStore(vectorStoreModel);
+                    var vectorStoreModel = new VectorStoreModel
+                    {
+                        id = vectorStore["id"]!.ToString()
+                    };
+                    AddVectorStore(vectorStoreModel);
+                }
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 
@@ -347,6 +441,29 @@ namespace cpGames.VSA.ViewModel
                 var file = Files.First(f => f.Selected);
                 await file.DeleteAsync();
             }
+        }
+
+        public async Task WaitForWorkingAsync()
+        {
+            while (Working)
+            {
+                await Task.Delay(100);
+            }
+        }
+
+        public bool ValidateSettings()
+        {
+            if (string.IsNullOrEmpty(ApiKey))
+            {
+                OutputWindowHelper.LogError("API key missing.");
+                return false;
+            }
+            if (string.IsNullOrEmpty(PythonDll))
+            {
+                OutputWindowHelper.LogError("Python DLL missing.");
+                return false;
+            }
+            return true;
         }
         #endregion
     }

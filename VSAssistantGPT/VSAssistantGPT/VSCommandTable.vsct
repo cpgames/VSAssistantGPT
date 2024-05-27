@@ -18,22 +18,16 @@
         <Buttons>
             <Button guid="VSAGuid" id="ShowVSACommand" priority="0x0100" type="Button">
                 <Parent guid="VSAGuid" id="MyMenuGroup" />
-                <Icon guid="GuidLogo" id="Logo" />
+                <Icon guid="GuidIcon" id="Icon" />
                 <Strings>
-                    <ButtonText>Show VSA</ButtonText>
+                    <ButtonText>Show VS Assistant</ButtonText>
                     <LocCanonicalName>.Tools.VSAGuid</LocCanonicalName>
-                </Strings>
-            </Button>
-            <Button guid="VSAGuid" id="ShowHelperCommand" priority="0x0200" type="Button">
-                <Strings>
-                    <ButtonText>Show Helper</ButtonText>
                 </Strings>
             </Button>
         </Buttons>
 
         <Bitmaps>
-            <Bitmap guid="GuidLogo" href="Resources\icons\Icon.png" usedList="Logo" />
-            <Bitmap guid="GuidPreview" href="Resources\icons\Preview.png" usedList="Preview" />
+            <Bitmap guid="GuidIcon" href="Resources\icons\icon16.png" usedList="Icon" />
         </Bitmaps>
     </Commands>
 
@@ -41,13 +35,9 @@
         <GuidSymbol name="VSAGuid" value="{CB8CF9FB-11EB-4B63-ABA2-6133D16F82F0}">
             <IDSymbol name="MyMenuGroup" value="0x1020" />
             <IDSymbol name="ShowVSACommand" value="0x0100" />
-            <IDSymbol name="ShowHelperCommand" value="0x0200" />
         </GuidSymbol>
-        <GuidSymbol name="GuidLogo" value="{4946C84E-C4C9-45DB-B1F7-EA362214B738}">
-            <IDSymbol name="Logo" value="1" />
-        </GuidSymbol>
-        <GuidSymbol name="GuidPreview" value="{786DC029-63FA-444A-8255-7F3ADE06BACF}">
-            <IDSymbol name="Preview" value="1" />
+        <GuidSymbol name="GuidIcon" value="{64671DD8-4E7C-4DB4-86A5-5C16E9845B15}">
+            <IDSymbol name="Icon" value="1" />
         </GuidSymbol>
     </Symbols>
 </CommandTable>

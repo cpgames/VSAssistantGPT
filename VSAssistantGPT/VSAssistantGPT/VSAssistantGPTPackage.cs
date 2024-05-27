@@ -29,7 +29,6 @@ namespace cpGames.VSA
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await ShowVSACommand.InitializeAsync(this);
-            await ShowHelperCommand.InitializeAsync(this);
         }
         #endregion
     }

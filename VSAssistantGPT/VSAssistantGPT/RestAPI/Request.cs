@@ -40,10 +40,15 @@ namespace cpGames.VSA.RestAPI
             {
                 throw new Exception("No active project");
             }
+            while (ProjectUtils.ActiveProject.Working)
+            {
+                await Task.Delay(100);
+            }
             if (string.IsNullOrEmpty(ProjectUtils.ActiveProject.ApiKey))
             {
                 throw new Exception("No API key");
             }
+            ProjectUtils.ActiveProject.Working = true;
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {ProjectUtils.ActiveProject.ApiKey}");
             client.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
@@ -64,6 +69,7 @@ namespace cpGames.VSA.RestAPI
             response.EnsureSuccessStatusCode();
             var responseString = await response.Content.ReadAsStringAsync();
             _response = JsonConvert.DeserializeObject<dynamic>(responseString);
+            ProjectUtils.ActiveProject.Working = false;
             if (_response == null)
             {
                 throw new Exception("Failed to parse response");

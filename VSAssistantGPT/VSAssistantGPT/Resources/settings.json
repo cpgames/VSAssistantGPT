@@ -1,0 +1,15 @@
+{
+    "fte": false,
+    "apiKey": "",
+    "pythonDll": "",
+    "selectedAssistant": "Programmer",
+    "newAssistantTemplate": {
+      "id": "",
+      "name": "Programmer",
+      "gptModel": "gpt-3.5-turbo-0125",
+      "description": "You are a helpful C# programming assistant.",
+      "instructions": "You have a tool file_search, which allows you to search source code files included in current project and troubleshooting knowledge base. You have not been pretrained to answer programming questions and perform programming tasks; you must use the search function to satisfy user requests.",
+      "toolset": [],
+      "vectorStoreId": ""
+    }
+  }

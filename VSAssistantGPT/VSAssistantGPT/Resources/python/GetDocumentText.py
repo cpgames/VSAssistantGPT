@@ -1,15 +1,15 @@
-# GetFileText.py
+# GetDocumentText.py
 
 import json
 from ToolBase import *
 
 
 class GetFileText(ToolBase):
-    name = "GetFileText"
-    description = "Gets all text in file."
+    name = "GetDocumentText"
+    description = "Get all text in a document."
     category = "Programming"
     arguments = [
-        Argument("filename", "string", "Name of the file to get text from."),
+        Argument("relative_path", "string", "Relative path of the document."),
     ]
 
     def call(self, function, tool_callback):

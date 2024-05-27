@@ -5,7 +5,7 @@ from ToolBase import ToolBase
 
 class HasSelection(ToolBase):
     name = "HasSelection"
-    description = "Returns true if there is selected text in file."
+    description = "Check if there is a selection in active document."
     category = "Programming"
 
     def call(self, function, tool_callback):

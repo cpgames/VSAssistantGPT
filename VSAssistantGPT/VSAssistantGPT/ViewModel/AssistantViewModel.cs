@@ -10,11 +10,13 @@ namespace cpGames.VSA.ViewModel
     {
         #region Fields
         private bool _modified;
+        private bool _isTemplate;
         #endregion
 
         #region Properties
         public Action? CreateAction { get; set; }
         public Action? RemoveAction { get; set; }
+
         public bool Modified
         {
             get => _modified;
@@ -27,6 +29,7 @@ namespace cpGames.VSA.ViewModel
                 }
             }
         }
+
         public string Id
         {
             get => _model.id;
@@ -48,6 +51,20 @@ namespace cpGames.VSA.ViewModel
                 if (_model.name != value)
                 {
                     _model.name = value;
+                    OnPropertyChanged();
+                    Modified = true;
+                }
+            }
+        }
+
+        public string GPTModel
+        {
+            get => _model.gptModel;
+            set
+            {
+                if (_model.gptModel != value)
+                {
+                    _model.gptModel = value;
                     OnPropertyChanged();
                     Modified = true;
                 }
@@ -96,6 +113,19 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
+        public bool IsTemplate
+        {
+            get => _isTemplate;
+            set
+            {
+                if (_isTemplate != value)
+                {
+                    _isTemplate = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public ObservableCollection<ToolEntryViewModel> Toolset { get; } = new();
         #endregion
 
@@ -120,29 +150,48 @@ namespace cpGames.VSA.ViewModel
         #region Methods
         public async Task SaveAsync()
         {
-            if (ProjectUtils.ActiveProject == null)
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
             {
-                throw new Exception("No active project");
+                return;
             }
             if (ProjectUtils.ActiveProject.Toolset.Count == 0)
             {
                 ProjectUtils.ActiveProject.LoadToolset();
             }
-            var createAssistantRequest = new CreateOrModifyAssistantRequest(Model, ProjectUtils.ActiveProject.Model.toolset);
-            var createAssistantResponse = await createAssistantRequest.SendAsync();
-            Id = createAssistantResponse.id;
-            Modified = false;
+            try
+            {
+                var createAssistantRequest = new CreateOrModifyAssistantRequest(Model, ProjectUtils.ActiveProject.Toolset);
+                var createAssistantResponse = await createAssistantRequest.SendAsync();
+                Id = createAssistantResponse.id;
+                Modified = false;
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
+            }
             CreateAction?.Invoke();
         }
 
         public async Task DeleteAsync()
         {
-            if (Id == null)
+            if (!string.IsNullOrEmpty(Id))
             {
-                throw new Exception("Assistant has not been created");
+                if (!ProjectUtils.ActiveProject.ValidateSettings())
+                {
+                    return;
+                }
+                try
+                {
+                    var request = new DeleteAssistantRequest(Id);
+                    await request.SendAsync();
+                }
+                catch (Exception e)
+                {
+                    await OutputWindowHelper.LogErrorAsync(e);
+                    ProjectUtils.ActiveProject.Working = false;
+                }
             }
-            var request = new DeleteAssistantRequest(Id);
-            await request.SendAsync();
             RemoveAction?.Invoke();
         }
 

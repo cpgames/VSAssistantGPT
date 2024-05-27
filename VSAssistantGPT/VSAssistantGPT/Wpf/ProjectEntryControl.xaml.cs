@@ -1,18 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Media;
 using cpGames.VSA.ViewModel;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ContextMenu = System.Windows.Controls.ContextMenu;
+using MenuItem = System.Windows.Controls.MenuItem;
+using TabControl = System.Windows.Controls.TabControl;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace cpGames.VSA.Wpf
 {
     public partial class ProjectEntryControl : UserControl
     {
         #region Properties
-        public ProjectViewModel? ViewModel
+        public ProjectViewModel ViewModel
         {
-            get => DataContext as ProjectViewModel;
+            get => (DataContext as ProjectViewModel)!;
             set => DataContext = value;
         }
         #endregion
@@ -20,40 +29,59 @@ namespace cpGames.VSA.Wpf
         #region Constructors
         public ProjectEntryControl()
         {
-            InitializeComponent();
             ViewModel = ProjectUtils.ActiveProject;
+            InitializeComponent();
+            Loaded += OnLoaded;
         }
         #endregion
 
         #region Events
-        private async void OnTabSelected(object sender, SelectionChangedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
+            // on FTE open Settings tab
+            if (ViewModel.FTE)
+            {
+                TabControl.SelectedIndex = 3;
+            }
+        }
+        #endregion
+
+        #region Methods
+        private async void TabSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(ViewModel.ApiKey))
             {
                 return;
+            }
+            // if tab 'Chat' is selected
+            if (e.Source is TabControl { SelectedIndex: 0 })
+            {
+                if (ViewModel.Assistants.Count == 0)
+                {
+                    await ViewModel.LoadAssistantsAsync();
+                }
+                var selectedAssistant = ViewModel.Assistants
+                    .FirstOrDefault(x => x.Name == ViewModel.SelectedAssistant);
+                if (selectedAssistant == null)
+                {
+                    selectedAssistant = ViewModel.Assistants.FirstOrDefault();
+                    ViewModel.SelectedAssistant = selectedAssistant?.Name ?? "";
+                }
+                ViewModel.Thread.Assistant = selectedAssistant;
             }
             // if tab 'Assistants' is selected
             if (e.Source is TabControl { SelectedIndex: 1 })
             {
-                await ViewModel.LoadAssistantsAsync();
+                if (ViewModel.Assistants.Count == 0)
+                {
+                    await ViewModel.LoadAssistantsAsync();
+                }
             }
             // if tab 'Tools' is selected
             else if (e.Source is TabControl { SelectedIndex: 2 })
             {
                 ViewModel.LoadToolset();
             }
-        }
-        #endregion
-
-        #region Methods
-        private void AddTaskClicked(object sender, RoutedEventArgs e)
-        {
-            ViewModel?.AddTask(new TaskModel());
-        }
-
-        private void StartProjectClick(object sender, RoutedEventArgs e)
-        {
-            //Processor.GetInstance().ExecuteAsync().ConfigureAwait(false);
         }
 
         private void ReloadClicked(object sender, RoutedEventArgs e)
@@ -80,56 +108,68 @@ namespace cpGames.VSA.Wpf
             Console.WriteLine($"Tool call response: {result}");
         }
 
-        private void SelectAssistantClicked(object sender, RoutedEventArgs e)
+        private async void SelectAssistantClicked(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var resourceDictionary = new ResourceDictionary
+            {
+                Source = new Uri("/VSA;component/generic.xaml", UriKind.RelativeOrAbsolute)
+            };
+            var menuTemplate = resourceDictionary["SimpleMenuTemplate"] as ControlTemplate;
+            if (menuTemplate == null)
+            {
+                return;
+            }
+            var itemTemplate = resourceDictionary["SimpleMenuItemTemplate"] as ControlTemplate;
+            if (itemTemplate == null)
+            {
+                return;
+            }
+            if (ProjectUtils.ActiveProject.Assistants.Count == 0)
+            {
+                await ProjectUtils.ActiveProject.LoadAssistantsAsync();
+            }
+            var contextMenu = new ContextMenu
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                Template = menuTemplate
+            };
+            foreach (var assistant in ProjectUtils.ActiveProject.Assistants)
+            {
+                var menuItem = new MenuItem
+                {
+                    Header = assistant.Name,
+                    Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
+                    Template = itemTemplate
+                };
+                menuItem.Click += (s, a) =>
+                {
+                    ViewModel.SelectedAssistant = assistant.Name;
+                };
+                contextMenu.Items.Add(menuItem);
+            }
+            contextMenu.IsOpen = true;
         }
 
         private void AddAssistantClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
-            var assistant = new AssistantModel
-            {
-                name = "New Assistant",
-                description = "Your helpful assistant",
-                instructions = "Instructions for the assistant"
-            };
-            ViewModel.AddAssistant(assistant);
+            var assistantTemplateJson = JsonConvert.SerializeObject(ViewModel.NewAssistantTemplateViewModel.Model);
+            var assistant = JsonConvert.DeserializeObject<AssistantModel>(assistantTemplateJson);
+            ViewModel.AddAssistant(assistant!);
         }
 
         private void AddToolClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
-            var tool = new ToolModel
-            {
-                name = "NewTool",
-                description = "Write tool description (used by GPT)",
-                category = "New Category"
-            };
-            ViewModel.AddTool(tool, false);
+            ViewModel.CreateTool();
         }
 
         private async void LoadFilesClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             await ViewModel.LoadFilesAsync();
         }
 
         private async void SyncFilesClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             if (ViewModel.Files.Count == 0)
             {
                 await ViewModel.LoadFilesAsync();
@@ -148,26 +188,22 @@ namespace cpGames.VSA.Wpf
                     name = projectItem.Name,
                     path = projectItem.FileNames[0]
                 };
-                ViewModel.AddFile(fileModel);
+                var fileViewModel = ViewModel.AddFile(fileModel);
+                if (SelectAllCheckbox.IsChecked == true)
+                {
+                    fileViewModel.Selected = true;
+                }
             }
             await ViewModel.UploadFilesAsync();
         }
 
         private async void DeleteFilesClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             await ViewModel.DeleteSelectedFilesAsync();
         }
 
         private async void FilesExpanded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             if (ViewModel.Files.Count == 0)
             {
                 await ViewModel.LoadFilesAsync();
@@ -176,10 +212,6 @@ namespace cpGames.VSA.Wpf
 
         private void SelectAllFilesChecked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             foreach (var file in ViewModel.Files)
             {
                 file.Selected = true;
@@ -188,105 +220,65 @@ namespace cpGames.VSA.Wpf
 
         private void SelectAllFilesUnchecked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             foreach (var file in ViewModel.Files)
             {
                 file.Selected = false;
             }
         }
 
-        private void SelectAllVectorStoresChecked(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SelectAllVectorStoresUnchecked(object sender, RoutedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private async void LoadVectorStoresClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
             await ViewModel.LoadVectorStoresAsync();
         }
 
         private async void VectorStoresExpanded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null)
-            {
-                return;
-            }
-            if (ViewModel.Files.Count == 0)
+            if (ViewModel.VectorStores.Count == 0)
             {
                 await ViewModel.LoadVectorStoresAsync();
             }
         }
 
-        private void AddVectorStoreClicked(object sender, RoutedEventArgs e)
+        private async void AddVectorStoreClicked(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            await ViewModel.CreateVectorStoreAsync();
         }
 
-        private async void RefreshThreadClicked(object sender, RoutedEventArgs e)
+        private void OpenToolsClicked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel == null || string.IsNullOrEmpty(ViewModel.Thread.Id))
+            var toolsDir = Utils.GetOrCreateAppDir("Tools");
+            Process.Start(toolsDir);
+        }
+
+        private void SaveProjectClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.Save();
+        }
+
+        private void PythonSelectClicked(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
             {
-                return;
+                Filter = "Python DLL|*.dll",
+                Title = "Select Python DLL"
+            };
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                ViewModel.PythonDll = openFileDialog.FileName;
             }
-            await ViewModel.Thread.DeleteAsync();
-            await ViewModel.Thread.CreateAsync();
+        }
+
+        private void ReloadToolsClicked(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ReloadToolset();
         }
         #endregion
 
         #region Testing
-        private void TestOpenFileClick(object sender, RoutedEventArgs e)
+        private void TestHasSelectionClick(object sender, RoutedEventArgs e)
         {
-            var arguments = new Dictionary<string, dynamic>
-            {
-                { "filename", "\\TestFolder\\TestFile.cs" }
-            };
-            ToolAPI.OpenFile(arguments);
-        }
-
-        private void TestCreateFileClick(object sender, RoutedEventArgs e)
-        {
-            var arguments = new Dictionary<string, dynamic>
-            {
-                { "filename", "\\TestFolder\\TestFile.cs" },
-                { "text", "This is a test file" }
-            };
-            ToolAPI.CreateFile(arguments);
-        }
-
-        private void TestCreateFolderClick(object sender, RoutedEventArgs e)
-        {
-            DTEUtils.CreateFolder("\\TestFolder1");
-        }
-
-        private void TestHasFileClick(object sender, RoutedEventArgs e)
-        {
-            var arguments = new Dictionary<string, dynamic>
-            {
-                { "filename", "\\TestFolder\\TestFile.cs" }
-            };
-            var result = ToolAPI.HasFile(arguments);
+            var result = ToolAPI.HasSelection(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
-        }
-
-        private void TestDeleteFileClick(object sender, RoutedEventArgs e)
-        {
-            var arguments = new Dictionary<string, dynamic>
-            {
-                { "filename", "\\TestFolder\\TestFile.cs" }
-            };
-            ToolAPI.DeleteFile(arguments);
         }
 
         private void TestGetSelectionClick(object sender, RoutedEventArgs e)
@@ -301,26 +293,121 @@ namespace cpGames.VSA.Wpf
             {
                 { "text", "some random text" }
             };
-            ToolAPI.SetSelection(arguments);
-        }
-
-        private void TestGetFilesClick(object sender, RoutedEventArgs e)
-        {
-            var result = ToolAPI.GetFiles(new Dictionary<string, dynamic>());
+            var result = ToolAPI.SetSelection(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
 
+        private void TestGetActiveDocumentTextClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetActiveDocumentText(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
 
-        private void TestGetFileTextClick(object sender, RoutedEventArgs e)
+        private void TestSetActiveDocumentTextClick(object sender, RoutedEventArgs e)
         {
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "\\TestFolder\\TestFile.cs" }
+                { "text", "This is a test file" }
             };
-            var result = ToolAPI.GetFileText(arguments);
+            var result = ToolAPI.SetActiveDocumentText(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestGetActiveDocumentPathClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetActiveDocumentPath(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestGetDocumentTextClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" }
+            };
+            var result = ToolAPI.GetDocumentText(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestSetDocumentTextClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" },
+                { "text", "This is a modified test file" }
+            };
+            var result = ToolAPI.SetDocumentText(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestOpenDocumentClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" }
+            };
+            var result = ToolAPI.OpenDocument(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestCloseDocumentClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" }
+            };
+            var result = ToolAPI.CloseDocument(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestCreateDocumentClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" },
+                { "text", "This is a test file" }
+            };
+            var result = ToolAPI.CreateDocument(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestDeleteDocumentClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" }
+            };
+            var result = ToolAPI.DeleteDocument(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestHasDocumentClick(object sender, RoutedEventArgs e)
+        {
+            var arguments = new Dictionary<string, dynamic>
+            {
+                { "filename", "TestFolder\\TestFile.cs" }
+            };
+            var result = ToolAPI.HasDocument(arguments);
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestListDocumentsClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.ListDocuments(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestGetErrorsClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetErrors(new Dictionary<string, dynamic>());
+            OutputWindowHelper.LogInfo("Testing", result.ToString());
+        }
+
+        private void TestGetProjectPathClick(object sender, RoutedEventArgs e)
+        {
+            var result = ToolAPI.GetProjectPath(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
         #endregion
-
     }
 }

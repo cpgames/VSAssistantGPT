@@ -55,9 +55,15 @@ namespace cpGames.VSA
             await Instance.WriteToOutputAsync($"[WARNING] - {context}: {message}");
         }
 
-        public static async Task LogErrorAsync(string context, string message)
+        public static async Task LogErrorAsync(Exception ex)
         {
-            await Instance.WriteToOutputAsync($"[ERROR] - {context}: {message}");
+            await Instance.WriteToOutputAsync($"[ERROR]: {ex.Message}");
+            await Instance.WriteToOutputAsync($"[TRACE]: {ex.StackTrace}");
+        }
+
+        public static async Task LogErrorAsync(string error)
+        {
+            await Instance.WriteToOutputAsync($"[ERROR]: {error}");
         }
 
         public static void LogInfo(string context, string message)
@@ -70,9 +76,15 @@ namespace cpGames.VSA
             Instance.WriteToOutput($"[WARNING] - {context}: {message}");
         }
 
-        public static void LogError(string context, string message)
+        public static void LogError(Exception ex)
         {
-            Instance.WriteToOutput($"[ERROR] - {context}: {message}");
+            Instance.WriteToOutput($"[ERROR]: {ex.Message}");
+            Instance.WriteToOutput($"[TRACE]: {ex.StackTrace}");
+        }
+
+        public static void LogError(string error)
+        {
+            Instance.WriteToOutput($"[ERROR]: {error}");
         }
     }
 }

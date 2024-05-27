@@ -7,8 +7,14 @@ namespace cpGames.VSA.ViewModel
 {
     public class RunViewModel : ViewModel<RunModel>
     {
+        #region Fields
+        private ThreadViewModel? _thread;
+        private AssistantViewModel? _assistant;
+        #endregion
+
         #region Properties
-        public Func<Task>? RunEnded { get; set; }
+        public Action? RunStarted { get; set; }
+        public Action? RunEnded { get; set; }
         public string Id
         {
             get => _model.id;
@@ -22,27 +28,27 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public string ThreadId
+        public ThreadViewModel? Thread
         {
-            get => _model.threadId;
+            get => _thread;
             set
             {
-                if (_model.threadId != value)
+                if (_thread != value)
                 {
-                    _model.threadId = value;
+                    _thread = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        public string AssistantId
+        public AssistantViewModel? Assistant
         {
-            get => _model.assistantId;
+            get => _assistant;
             set
             {
-                if (_model.assistantId != value)
+                if (_assistant != value)
                 {
-                    _model.assistantId = value;
+                    _assistant = value;
                     OnPropertyChanged();
                 }
             }
@@ -71,28 +77,52 @@ namespace cpGames.VSA.ViewModel
         #region Methods
         public async Task CreateAsync()
         {
-            var request = new CreateRunRequest(ThreadId, AssistantId);
-            var response = await request.SendAsync();
-            Id = response.id;
-            UpdateStatus(response.status.ToString());
-            do
+            if (Thread == null)
             {
-                await Task.Delay(500);
-                await GetAsync();
-            } while (!Ended);
-            if (RunEnded != null)
-            {
-                await RunEnded.Invoke();
+                await OutputWindowHelper.LogErrorAsync("Thread has not been set.");
+                return;
             }
+            if (Assistant == null)
+            {
+                await OutputWindowHelper.LogErrorAsync("Assistant has not been set.");
+                return;
+            }
+            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            {
+                return;
+            }
+            RunStarted?.Invoke();
+            try
+            {
+                var request = new CreateRunRequest(Thread.Model, Assistant.Model);
+                var response = await request.SendAsync();
+                Id = response.id;
+                UpdateStatus(response.status.ToString());
+                do
+                {
+                    await Task.Delay(500);
+                    await GetAsync();
+                } while (!Ended);
+            }
+            catch (Exception e)
+            {
+                await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
+            }
+            RunEnded?.Invoke();
         }
 
-        public async Task GetAsync()
+        private async Task GetAsync()
         {
             if (Id == null)
             {
                 throw new Exception("Run has not been created");
             }
-            var request = new GetRunRequest(ThreadId, Id);
+            if (Thread == null)
+            {
+                throw new Exception("Thread has not been set");
+            }
+            var request = new GetRunRequest(Thread.Id, Id);
             var response = await request.SendAsync();
             UpdateStatus(response.status.ToString());
             if (Status == RunStatus.requires_action)
@@ -109,13 +139,17 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public async Task SubmitToolOutputsAsync(Dictionary<string, string> outputs)
+        private async Task SubmitToolOutputsAsync(Dictionary<string, string> outputs)
         {
             if (Id == null)
             {
                 throw new Exception("Run has not been created");
             }
-            var request = new SubmitToolOutputsRequest(ThreadId, Id, outputs);
+            if (Thread == null)
+            {
+                throw new Exception("Thread has not been set");
+            }
+            var request = new SubmitToolOutputsRequest(Thread.Id, Id, outputs);
             var response = await request.SendAsync();
             UpdateStatus(response.status.ToString());
         }

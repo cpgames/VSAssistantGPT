@@ -5,7 +5,7 @@ from ToolBase import *
 
 class SetSelection(ToolBase):
     name = "SetSelection"
-    description = "Sets selected text in file."
+    description = "Overwrite selected text in active document."
     category = "Programming"
     arguments = [
             Argument("text", "string", "Text to replace current selection with."),

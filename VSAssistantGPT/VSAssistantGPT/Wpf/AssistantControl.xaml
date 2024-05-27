@@ -22,33 +22,34 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
-                <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SaveAssistantClicked">
-                    <Button.Content>
-                        <Grid>
-                            <Image x:Name="SaveImage"
-                                   Source="pack://application:,,,/VSA;component/Resources/icons/save.png"
-                                   Width="16" Height="16" />
-                            <Rectangle x:Name="TintRectangle" Style="{StaticResource TintRectangleStyle}" Opacity="0.5" />
-                        </Grid>
-                    </Button.Content>
-                </Button>
-
-                <Button Grid.Column="3"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="RemoveAssistantClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                               Width="16" Height="16" />
-                    </Button.Content>
-                </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="{Binding IsTemplate, Converter={StaticResource BoolToVisibilityInvConverter}}">
+                    <Button
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="save"
+                        Click="SaveAssistantClicked"
+                        Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <Button
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="delete"
+                        Click="RemoveAssistantClicked" />
+                </StackPanel>
             </Grid>
             <TextBox
                 Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='Assistant Name'}" />
+            <Label Content="GPT Model:" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox
+                    Text="{Binding GPTModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='gpt-3.5-turbo-0125'}" />
+                <Button Grid.Column="1" Content="..." Foreground="White"
+                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
+                        Click="SelectModelClicked" Height="20" />
+            </Grid>
             <Label Content="Description:" />
             <TextBox
                 Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='Assistant Description'}"
@@ -65,13 +66,9 @@
                 </Grid.ColumnDefinitions>
                 <Label Content="Toolset:" />
                 <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="AddToolClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/plus.png"
-                               Width="10" Height="10" Margin="2,0,2,0" />
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="plus"
+                        Click="AddToolClicked" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Toolset}">
                 <ItemsControl.ItemsPanel>
@@ -85,7 +82,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <Grid>
+            <Grid Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />

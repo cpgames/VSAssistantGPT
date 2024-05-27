@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vsa="clr-namespace:cpGames.VSA"
              mc:Ignorable="d"
              d:DesignHeight="250" d:DesignWidth="200">
     <UserControl.Resources>
@@ -21,33 +22,26 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
                 <Button Grid.Column="2"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SaveToolClicked">
-                    <Button.Content>
-                        <Grid>
-                            <Image x:Name="SaveImage" Source="pack://application:,,,/VSA;component/Resources/icons/save.png"
-                                   Width="16" Height="16"/>
-                            <Rectangle x:Name="TintRectangle" Style="{StaticResource TintRectangleStyle}" Opacity="0.5" />
-                        </Grid>
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="save"
+                        Click="SaveToolClicked"
+                        Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <Button Grid.Column="3"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="RemoveToolClicked">
-                    <Button.Content>
-                        <Image Source="pack://application:,,,/VSA;component/Resources/icons/delete.png"
-                               Width="16" Height="16" />
-                    </Button.Content>
-                </Button>
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="open"
+                        Click="OpenToolClicked"/>
+                <Button Grid.Column="4"
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="delete"
+                        Click="RemoveToolClicked"/>
             </Grid>
-            <TextBox Text="{Binding Path=Name, FallbackValue='Tool Name'}" />
-            <Label Content="Category:" />
-            <TextBox Text="{Binding Path=Category, FallbackValue='Tool Category'}" />
+            <TextBox Text="{Binding Path=Name, FallbackValue='Tool Name'}" IsReadOnly="{Binding Modified, Converter={StaticResource BoolToInvBoolConverter}}" />
             <Label Content="Description:" />
-            <TextBox Text="{Binding Path=Description, FallbackValue='Tool Description'}" TextWrapping="Wrap" AcceptsReturn="True" />
+            <TextBox Text="{Binding Path=Description, FallbackValue='Tool Description'}" TextWrapping="Wrap" IsReadOnly="True" />
         </StackPanel>
     </Border>
 </UserControl>

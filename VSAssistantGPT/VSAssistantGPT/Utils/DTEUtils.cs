@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using EnvDTE;
+﻿using EnvDTE;
+using EnvDTE80;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace cpGames.VSA
 {
@@ -72,6 +74,11 @@ namespace cpGames.VSA
         {
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             Assumes.Present(dte);
+            var document = dte.ActiveDocument;
+            if (document != null)
+            {
+                return document.ProjectItem?.ContainingProject;
+            }
             if (dte.ActiveSolutionProjects is not Array projects || projects.Length == 0)
             {
                 return null;
@@ -97,15 +104,21 @@ namespace cpGames.VSA
             return projectItems;
         }
 
-        public static List<string> GetFilesInActiveProject()
+        public static string GetRelativePath(string path)
+        {
+            var relativePath = path.Replace(GetProjectPath(), "");
+            ValidatePath(ref relativePath);
+            return relativePath;
+        }
+
+        public static List<string> GetDocumentsInActiveProject()
         {
             var projectItems = GetProjectItemsInActiveProject();
             var files = new List<string>();
             foreach (var item in projectItems)
             {
-                var fileName = item.FileNames[0];
-                var relativeFileName = fileName.Replace(GetProjectPath(), "");
-                files.Add(relativeFileName);
+                var fileName = GetRelativePath(item.FileNames[0]);
+                files.Add(fileName);
             }
             return files;
         }
@@ -147,31 +160,31 @@ namespace cpGames.VSA
             return Path.GetDirectoryName(project.FullName)!;
         }
 
-        public static void ValidateFileName(ref string fileName)
+        public static void ValidatePath(ref string path)
         {
-            if (string.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(path))
             {
                 throw new Exception("File name cannot be empty.");
             }
-            if (fileName.StartsWith("/"))
+            if (path.StartsWith("/"))
             {
-                fileName = fileName.Substring(1);
+                path = path.Substring(1);
             }
-            else if (fileName.StartsWith("\\"))
+            else if (path.StartsWith("\\"))
             {
-                fileName = fileName.Substring(1);
+                path = path.Substring(1);
             }
         }
 
-        public static void CreateFolder(string fileName)
+        public static void CreateFolder(string folderPath)
         {
-            ValidateFileName(ref fileName);
+            ValidatePath(ref folderPath);
             var project = GetActiveProject();
             if (project == null)
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), folderPath);
             if (!Directory.Exists(fullPath))
             {
                 Directory.CreateDirectory(fullPath);
@@ -179,15 +192,15 @@ namespace cpGames.VSA
             project.ProjectItems.AddFromDirectory(fullPath);
         }
 
-        public static void CreateFile(string fileName)
+        public static void CreateDocument(string documentPath)
         {
-            ValidateFileName(ref fileName);
+            ValidatePath(ref documentPath);
             var project = GetActiveProject();
             if (project == null)
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
             if (!File.Exists(fullPath))
             {
                 // create folder if doesn't exist
@@ -199,40 +212,40 @@ namespace cpGames.VSA
                 File.Create(fullPath).Close();
                 project.ProjectItems.AddFromFile(fullPath);
             }
-            OpenFile(fileName);
+            OpenDocument(documentPath);
         }
 
-        public static void DeleteFile(string fileName)
+        public static void DeleteDocument(string documentPath)
         {
-            ValidateFileName(ref fileName);
+            ValidatePath(ref documentPath);
             var project = GetActiveProject();
             if (project == null)
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
             if (File.Exists(fullPath))
             {
                 File.Delete(fullPath);
             }
         }
 
-        public static bool FileExists(string fileName)
+        public static bool DocumentExists(string documentPath)
         {
-            ValidateFileName(ref fileName);
+            ValidatePath(ref documentPath);
             var project = GetActiveProject();
             if (project == null)
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
             return File.Exists(fullPath);
         }
 
-        public static void OpenFile(string fileName)
+        public static void OpenDocument(string documentPath)
         {
-            ValidateFileName(ref fileName);
-            if (!FileExists(fileName))
+            ValidatePath(ref documentPath);
+            if (!DocumentExists(documentPath))
             {
                 throw new Exception("File does not exist.");
             }
@@ -241,39 +254,50 @@ namespace cpGames.VSA
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             Assumes.Present(dte);
 
             dte.ItemOperations.OpenFile(fullPath);
         }
 
-        public static void CloseFile(string fileName)
+        public static void CloseDocument(string documentPath)
         {
-            ValidateFileName(ref fileName);
+            ValidatePath(ref documentPath);
             var project = GetActiveProject();
             if (project == null)
             {
                 throw new Exception("No active project found.");
             }
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             Assumes.Present(dte);
             var document = dte.Documents.Item(fullPath);
             document.Close();
         }
 
-        public static void SaveFile(string? fileName = null)
+        public static void SaveDocument(string? documentPath = null)
         {
-            if (fileName == null)
+            if (documentPath == null)
             {
-                fileName = GetActiveDocumentRelativePath();
+                documentPath = GetActiveDocumentRelativePath();
             }
-            ValidateFileName(ref fileName);
-            var fullPath = Path.Combine(GetProjectPath(), fileName);
-            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
-            var document = dte.Documents.Item(fullPath);
-            document.Save();
+            ValidatePath(ref documentPath);
+            var fullPath = Path.Combine(GetProjectPath(), documentPath);
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            var items = dte.Documents.GetEnumerator();
+            while (items.MoveNext())
+            {
+                var fullName = ((Document)items.Current!).FullName;
+                OutputWindowHelper.LogInfo("Test", fullName);
+            }
+            OutputWindowHelper.LogInfo("Saving", fullPath);
+            var item = dte.Solution.FindProjectItem(fullPath);
+            if (item is { Document: not null })
+            {
+                var document = item.Document;
+                document.Save();
+            }
         }
 
         public static string GetSolutionFolderPath()
@@ -295,6 +319,31 @@ namespace cpGames.VSA
         {
             var dte = (DTE)ServiceProvider.GlobalProvider.GetService(typeof(DTE));
             return dte.Solution.IsOpen;
+        }
+
+        public static JArray GetErrors()
+        {
+            var errorArray = new JArray();
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE2;
+            Assumes.Present(dte);
+            var errorList = dte.ToolWindows.ErrorList;
+
+            for (var i = 1; i <= errorList.ErrorItems.Count; i++)
+            {
+                var errorItem = errorList.ErrorItems.Item(i);
+                var errorObject = new JObject
+                {
+                    ["Description"] = errorItem.Description,
+                    ["ErrorLevel"] = errorItem.ErrorLevel.ToString(),
+                    ["File"] = GetRelativePath(errorItem.FileName),
+                    ["Line"] = errorItem.Line,
+                    ["Column"] = errorItem.Column
+                };
+
+                errorArray.Add(errorObject);
+            }
+
+            return errorArray;
         }
         #endregion
     }

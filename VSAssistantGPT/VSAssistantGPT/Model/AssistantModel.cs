@@ -7,6 +7,7 @@ namespace cpGames.VSA
         #region Fields
         public string id = "";
         public string name = "";
+        public string gptModel = "";
         public string description = "";
         public string instructions = "";
         public List<ToolEntryModel> toolset = new();
