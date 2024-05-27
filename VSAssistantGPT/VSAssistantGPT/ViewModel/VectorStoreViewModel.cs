@@ -44,11 +44,12 @@ namespace cpGames.VSA.ViewModel
             {
                 var request = new CreateVectorStoreRequest();
                 var response = await request.SendAsync();
-                Id = response.data["id"]!.ToString();
+                Id = response.id;
             }
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
             CreateAction?.Invoke();
         }
@@ -72,6 +73,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
             RemoveAction?.Invoke();
         }
@@ -115,6 +117,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
         }
 
@@ -177,6 +180,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
         }
         #endregion

@@ -241,9 +241,7 @@ namespace cpGames.VSA.Wpf
 
         private async void AddVectorStoreClicked(object sender, RoutedEventArgs e)
         {
-            var vectorStore = new VectorStoreModel();
-            var vectorStoreViewModel = ViewModel.AddVectorStore(vectorStore);
-            await vectorStoreViewModel.CreateAsync();
+            await ViewModel.CreateVectorStoreAsync();
         }
 
         private void OpenToolsClicked(object sender, RoutedEventArgs e)

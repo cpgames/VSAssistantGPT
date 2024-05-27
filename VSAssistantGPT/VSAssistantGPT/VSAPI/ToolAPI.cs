@@ -251,7 +251,7 @@ namespace cpGames.VSA
             var selection = new JObject();
             if (!DTEUtils.IsSelectionEmpty())
             {
-                selection["relativePath"] = DTEUtils.GetActiveDocumentRelativePath();
+                selection["relative_path"] = DTEUtils.GetActiveDocumentRelativePath();
                 var selectionText = DTEUtils.GetSelection();
                 selection["text"] = selectionText;
                 selection["result"] = !string.IsNullOrEmpty(selectionText) ?
@@ -299,25 +299,25 @@ namespace cpGames.VSA
 
         public static JObject GetActiveDocumentPath(Dictionary<string, dynamic> arguments)
         {
-            var documentPath = DTEUtils.GetActiveDocumentRelativePath();
+            var relativePath = DTEUtils.GetActiveDocumentRelativePath();
             return new JObject
             {
-                ["documentPath"] = documentPath,
+                ["relative_path"] = relativePath,
                 ["result"] = "success"
             };
         }
 
         public static JObject GetDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var documentPath = arguments["documentPath"];
-            if (!DTEUtils.DocumentExists(documentPath))
+            var relativePath = arguments["relative_path"];
+            if (!DTEUtils.DocumentExists(relativePath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenDocument(documentPath);
+            DTEUtils.OpenDocument(relativePath);
             var result = new JObject
             {
                 ["result"] = "success",
@@ -328,15 +328,15 @@ namespace cpGames.VSA
 
         public static JObject SetDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var documentPath = arguments["documentPath"];
-            if (!DTEUtils.DocumentExists(documentPath))
+            var relativePath = arguments["relative_path"];
+            if (!DTEUtils.DocumentExists(relativePath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenDocument(documentPath);
+            DTEUtils.OpenDocument(relativePath);
             DTEUtils.SetActiveDocumentText(arguments["text"]);
             DTEUtils.SaveDocument();
             return new JObject
@@ -347,15 +347,15 @@ namespace cpGames.VSA
 
         public static JObject OpenDocument(Dictionary<string, dynamic> arguments)
         {
-            string documentPath = arguments["documentPath"];
-            if (!DTEUtils.DocumentExists(documentPath))
+            string relativePath = arguments["relative_path"];
+            if (!DTEUtils.DocumentExists(relativePath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.OpenDocument(documentPath);
+            DTEUtils.OpenDocument(relativePath);
             return new JObject
             {
                 ["result"] = "success"
@@ -364,15 +364,15 @@ namespace cpGames.VSA
 
         public static JObject CloseDocument(Dictionary<string, dynamic> arguments)
         {
-            string documentPath = arguments["documentPath"];
-            if (!DTEUtils.DocumentExists(documentPath))
+            string relativePath = arguments["relative_path"];
+            if (!DTEUtils.DocumentExists(relativePath))
             {
                 return new JObject
                 {
                     ["result"] = "file not found"
                 };
             }
-            DTEUtils.CloseDocument(documentPath);
+            DTEUtils.CloseDocument(relativePath);
             return new JObject
             {
                 ["result"] = "success"
@@ -381,13 +381,13 @@ namespace cpGames.VSA
 
         public static JObject CreateDocument(Dictionary<string, dynamic> arguments)
         {
-            string documentPath = arguments["documentPath"];
+            string relativePath = arguments["relative_path"];
             string text = arguments["text"];
-            DTEUtils.CreateDocument(documentPath);
+            DTEUtils.CreateDocument(relativePath);
             SetDocumentText(
                 new Dictionary<string, dynamic>
                 {
-                    ["documentPath"] = documentPath,
+                    ["relative_path"] = relativePath,
                     ["text"] = text
                 });
             DTEUtils.SaveDocument();
@@ -399,8 +399,8 @@ namespace cpGames.VSA
 
         public static JObject DeleteDocument(Dictionary<string, dynamic> arguments)
         {
-            string documentPath = arguments["documentPath"];
-            DTEUtils.DeleteDocument(documentPath);
+            string relativePath = arguments["relative_path"];
+            DTEUtils.DeleteDocument(relativePath);
             return new JObject
             {
                 ["result"] = "success"
@@ -409,10 +409,10 @@ namespace cpGames.VSA
 
         public static JObject HasDocument(Dictionary<string, dynamic> arguments)
         {
-            string documentPath = arguments["documentPath"];
+            string relativePath = arguments["relative_path"];
             var result = new JObject
             {
-                ["result"] = DTEUtils.DocumentExists(documentPath)
+                ["result"] = DTEUtils.DocumentExists(relativePath)
             };
             return result;
         }
@@ -423,8 +423,8 @@ namespace cpGames.VSA
             var filesArr = new JArray();
             foreach (var file in files)
             {
-                var documentPath = DTEUtils.GetRelativePath(file.FileNames[0]);
-                filesArr.Add(documentPath);
+                var relativePath = DTEUtils.GetRelativePath(file.FileNames[0]);
+                filesArr.Add(relativePath);
             }
             var result = new JObject
             {
@@ -445,7 +445,7 @@ namespace cpGames.VSA
             var result = new JObject
             {
                 ["result"] = "success",
-                ["projectPath"] = projectPath
+                ["project_path"] = projectPath
             };
             return result;
         }

@@ -217,6 +217,13 @@ namespace cpGames.VSA.ViewModel
             return vectorStoreViewModel;
         }
 
+        public async Task CreateVectorStoreAsync()
+        {
+            var vectorStore = new VectorStoreModel();
+            var vectorStoreViewModel = AddVectorStore(vectorStore);
+            await vectorStoreViewModel.CreateAsync();
+        }
+
         public void Save()
         {
             try
@@ -290,6 +297,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 
@@ -383,6 +391,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 
@@ -410,6 +419,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                Working = false;
             }
         }
 

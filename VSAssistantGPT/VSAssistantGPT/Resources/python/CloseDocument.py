@@ -9,7 +9,7 @@ class OpenDocument(ToolBase):
     description = "Opens a document."
     category = "Programming"
     arguments = [
-        Argument("documentPath", "string", "Relative path of the document.")
+        Argument("relative_path", "string", "Relative path of the document.")
     ]
 
     def call(self, function, tool_callback):

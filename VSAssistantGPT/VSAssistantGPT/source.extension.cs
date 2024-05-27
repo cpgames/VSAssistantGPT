@@ -11,7 +11,7 @@ namespace cpGames.VSA
         public const string Name = "VSA";
         public const string Description = @"Your friendly AI programmer.";
         public const string Language = "en-US";
-        public const string Version = "0.1";
+        public const string Version = "0.4";
         public const string Author = "ChillPillGames";
         public const string Tags = "AI";
     }

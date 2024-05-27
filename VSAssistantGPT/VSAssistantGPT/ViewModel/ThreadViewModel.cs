@@ -110,6 +110,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
         }
 
@@ -134,6 +135,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
                 return;
             }
             RemoveAction?.Invoke();
@@ -157,6 +159,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
                 return;
             }
             await UpdateMessagesAsync();
@@ -199,6 +202,7 @@ namespace cpGames.VSA.ViewModel
             catch (Exception e)
             {
                 await OutputWindowHelper.LogErrorAsync(e);
+                ProjectUtils.ActiveProject.Working = false;
             }
         }
 
