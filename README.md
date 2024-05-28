@@ -1,5 +1,7 @@
-# VSAssistantGPT
+# VS GPT Assistant
 Visual Studio extension utilizing OpenAI GPT assistants
+
+[VS Marketplace Link](https://marketplace.visualstudio.com/items?itemName=ChillPillGames.VSA)
 
 ## Setup
 1. Open Visual Studio
