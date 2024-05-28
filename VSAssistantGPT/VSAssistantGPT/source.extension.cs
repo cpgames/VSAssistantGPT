@@ -8,10 +8,10 @@ namespace cpGames.VSA
     internal sealed partial class Vsix
     {
         public const string Id = "VSA.f705a1a6-5207-4496-ad4f-a7b8a52eebd1";
-        public const string Name = "VSA";
-        public const string Description = @"Your friendly AI programmer.";
+        public const string Name = "Visual Studio GPT Assistant";
+        public const string Description = @"Visual Studio extension utilizing OpenAI GPT assistants.";
         public const string Language = "en-US";
-        public const string Version = "0.4";
+        public const string Version = "1.1";
         public const string Author = "ChillPillGames";
         public const string Tags = "AI";
     }
