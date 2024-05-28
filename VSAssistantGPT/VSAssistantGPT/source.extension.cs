@@ -11,7 +11,7 @@ namespace cpGames.VSA
         public const string Name = "Visual Studio GPT Assistant";
         public const string Description = @"Visual Studio extension utilizing OpenAI GPT assistants.";
         public const string Language = "en-US";
-        public const string Version = "1.0";
+        public const string Version = "1.1";
         public const string Author = "ChillPillGames";
         public const string Tags = "AI";
     }

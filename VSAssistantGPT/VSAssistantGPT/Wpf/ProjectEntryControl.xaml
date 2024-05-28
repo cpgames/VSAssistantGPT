@@ -216,7 +216,7 @@
                 <wpf:AssistantControl DataContext="{Binding NewAssistantTemplateViewModel}" />
             </StackPanel>
         </TabItem>
-        <TabItem Header="Testing" Visibility="{Binding IsDebugVisible}">
+        <TabItem Header="Testing" Visibility="{Binding IsTestingVisible}">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Button Content="Has Selection" Click="TestHasSelectionClick" />
