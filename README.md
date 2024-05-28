@@ -63,7 +63,7 @@ You can bring up a minimal chat window directly from the text editor, instead of
 8. Save python file.
 9. In the `Tools` tab, click `Refresh` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3bafb799-581d-47a0-b25c-c06f8d35c80b) button to reload the toolset. This reloads all tool modules in case you've made changes to them without requiring to restart Visual Studio.
 
-Note: If you would like to call any of built-in VSIX functions, refer to [ToolAPI class](https://github.com/cpgames/VSAssistantGPT/blob/main/VSAssistantGPT/VSAssistantGPT/VSAPI/ToolAPI.cs), specifically functions of return type and parameters like these `public static JObject HasSelection(Dictionary<string, dynamic> arguments)` (they are at the bottom of the file).
+Note: If you would like to call any of built-in VSIX functions, refer to [ToolAPI class](https://github.com/cpgames/VSAssistantGPT/blob/main/VSAssistantGPT/VSAssistantGPT/VSAPI/ToolAPI.cs), specifically functions of return type and parameters like these `public static JObject HasSelection(Dictionary<string, dynamic> arguments)` (they are at the bottom of the file). Refer to [CreateReadme.py](https://github.com/cpgames/VSAssistantGPT/blob/main/SampleTools/CreateReadme.py) for examples.
 
 ## Debugging Assistant Errors
 All output is printed to Output window (`View->Output->AssistantGPT`).
