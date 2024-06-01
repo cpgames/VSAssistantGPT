@@ -77,9 +77,6 @@
     <Compile Include="RestAPI\ListMessagesRequest.cs" />
     <Compile Include="VSAPI\ToolAPI.cs" />
     <Compile Include="ViewModel\AssistantViewModel.cs" />
-    <Compile Include="OptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="OutputWindowHelper.cs" />
     <Compile Include="Model\AssistantModel.cs" />
     <Compile Include="RestAPI\CreateOrModifyAssistantRequest.cs" />

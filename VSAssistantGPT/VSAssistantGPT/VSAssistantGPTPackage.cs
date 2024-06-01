@@ -13,13 +13,6 @@ namespace cpGames.VSA
     [ProvideToolWindow(typeof(MainWindow.Pane), Style = VsDockStyle.Tabbed, Window = WindowGuids.SolutionExplorer)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(PackageGuids.VSAGuidString)]
-    [ProvideOptionPage(
-        typeof(OptionsPage),
-        "VSA",
-        "Settings",
-        0,
-        0,
-        true)]
     public sealed class VSAssistantGPTPackage : ToolkitPackage
     {
         #region Methods
