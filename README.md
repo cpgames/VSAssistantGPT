@@ -1,3 +1,5 @@
+Turn ★ into ⭐ (top-right corner) if you like the project!
+
 # VS GPT Assistant
 Visual Studio extension utilizing OpenAI GPT assistants
 
