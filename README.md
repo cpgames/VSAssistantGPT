@@ -1,7 +1,9 @@
 Turn ★ into ⭐ (top-right corner) if you like the project!
 
 # VS GPT Assistant
-Visual Studio extension utilizing OpenAI GPT assistants
+Visual Studio extension utilizing OpenAI GPT assistants.
+
+[![Video](https://img.youtube.com/vi/3N07ChRxuxM/hqdefault.jpg)](https://www.youtube.com/watch?v=3N07ChRxuxM)
 
 [VS Marketplace Link](https://marketplace.visualstudio.com/items?itemName=ChillPillGames.VSA)
 
