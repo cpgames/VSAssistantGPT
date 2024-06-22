@@ -52,7 +52,7 @@ namespace cpGames.VSA
                 {
                     throw new Exception("Python dll not found.");
                 }
-                Runtime.PythonDLL = pythonFile.Name;
+                Runtime.PythonDLL = pythonFile.FullName;
                 PythonEngine.PythonHome = pythonFile.DirectoryName!;
 
                 PythonEngine.Initialize();
