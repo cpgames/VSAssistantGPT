@@ -14,6 +14,7 @@ Visual Studio extension utilizing OpenAI GPT assistants.
 4. Set your OpenAI `API key`.
 5. Set `Python Dll` path. E.g. C:\Users\{username}\miniconda3\python39.dll
 6. Save settings ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/8b37325c-c5c3-4c07-b2f4-4addb70453e8).
+7. **NOTE**: There's very likely a bug within pythonnet package causing Python Engine not initialize properly in VSIX environment (See AssistantGPT Output window and if Tools tab in VSA window is empty). If you encounter this error, the only possible fix right now is open VSA window. Exist Visual Studio, start Visual Studio again with VSA open. Then go to Tools and ensure that toolset is loaded.
 
 ## Uploading Project Resources (optional)
 To better understand the project, VS assistant can use project's source files. They need to be uploaded manually.
