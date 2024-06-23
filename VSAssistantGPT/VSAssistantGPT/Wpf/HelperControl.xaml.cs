@@ -10,14 +10,15 @@ using Microsoft.VisualStudio.Shell;
 namespace cpGames.VSA.Wpf
 {
     /// <summary>
-    /// Interaction logic for HelperControl.xaml
+    ///     Interaction logic for HelperControl.xaml
     /// </summary>
     public partial class HelperControl : UserControl
     {
         #region Fields
+        private readonly DialogWindow _dialogWindow;
+        private bool _isClosing;
         private bool _isDragging;
         private Point _startPoint;
-        private readonly DialogWindow _dialogWindow;
         #endregion
 
         #region Properties
@@ -53,7 +54,10 @@ namespace cpGames.VSA.Wpf
                     _dialogWindow.Activate();
                     _dialogWindow.Deactivated += (s, e) =>
                     {
-                        _dialogWindow.Close();
+                        if (!_isClosing)
+                        {
+                            _dialogWindow.Close();
+                        }
                     };
                     //  find "MessageText" textbox in Content and set focus
                     // var messageText = FindName("MessageText") as TextBox;
@@ -87,6 +91,21 @@ namespace cpGames.VSA.Wpf
 
                 // Update start point for the next move
                 _startPoint = currentPosition;
+            }
+        }
+
+        private void CloseClicked(object sender, RoutedEventArgs e)
+        {
+            _isClosing = true;
+            _dialogWindow.Close();
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                _isClosing = true;
+                _dialogWindow.Close();
             }
         }
         #endregion

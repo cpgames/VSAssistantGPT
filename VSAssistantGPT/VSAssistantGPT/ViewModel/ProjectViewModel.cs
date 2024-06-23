@@ -167,7 +167,7 @@ namespace cpGames.VSA.ViewModel
             };
         }
 
-        public void CreateTool()
+        public async Task CreateToolAsync()
         {
             if (!ValidateSettings())
             {
@@ -175,7 +175,7 @@ namespace cpGames.VSA.ViewModel
             }
             if (Toolset.Count == 0)
             {
-                if (!LoadToolset())
+                if (!await LoadToolsetAsync())
                 {
                     return;
                 }
@@ -247,7 +247,7 @@ namespace cpGames.VSA.ViewModel
             }
             if (Toolset.Count == 0)
             {
-                LoadToolset();
+                await LoadToolsetAsync();
             }
 
             try
@@ -301,7 +301,7 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public bool LoadToolset()
+        public async Task<bool> LoadToolsetAsync()
         {
             if (!ValidateSettings())
             {
@@ -310,7 +310,8 @@ namespace cpGames.VSA.ViewModel
             try
             {
                 Toolset.Clear();
-                if (!ToolAPI.GetToolset(out var toolsetJson))
+                var toolsetJson = await ToolAPI.GetToolsetAsync();
+                if (string.IsNullOrEmpty(toolsetJson))
                 {
                     return false;
                 }
@@ -342,13 +343,13 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError(e);
+                await OutputWindowHelper.LogErrorAsync(e);
                 return false;
             }
             return true;
         }
 
-        public void ReloadToolset()
+        public async Task ReloadToolsetAsync()
         {
             if (!ValidateSettings())
             {
@@ -360,10 +361,10 @@ namespace cpGames.VSA.ViewModel
             }
             catch (Exception e)
             {
-                OutputWindowHelper.LogError(e);
+                await OutputWindowHelper.LogErrorAsync(e);
                 return;
             }
-            LoadToolset();
+            await LoadToolsetAsync();
         }
 
         public async Task LoadFilesAsync()

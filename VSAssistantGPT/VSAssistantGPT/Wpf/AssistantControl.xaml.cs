@@ -29,7 +29,7 @@ namespace cpGames.VSA.Wpf
         #endregion
 
         #region Methods
-        private void AddToolClicked(object sender, RoutedEventArgs e)
+        private async void AddToolClicked(object sender, RoutedEventArgs e)
         {
             if (ViewModel == null)
             {
@@ -52,7 +52,7 @@ namespace cpGames.VSA.Wpf
 
             if (ProjectUtils.ActiveProject.Toolset.Count == 0)
             {
-                ProjectUtils.ActiveProject.LoadToolset();
+                await ProjectUtils.ActiveProject.LoadToolsetAsync();
             }
 
             var toolset = ProjectUtils.ActiveProject.Toolset;

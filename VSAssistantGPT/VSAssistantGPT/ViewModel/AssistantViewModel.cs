@@ -156,7 +156,7 @@ namespace cpGames.VSA.ViewModel
             }
             if (ProjectUtils.ActiveProject.Toolset.Count == 0)
             {
-                ProjectUtils.ActiveProject.LoadToolset();
+                await ProjectUtils.ActiveProject.LoadToolsetAsync();
             }
             try
             {

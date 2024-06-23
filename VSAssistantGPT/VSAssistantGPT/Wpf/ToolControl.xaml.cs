@@ -30,9 +30,9 @@ namespace cpGames.VSA.Wpf
             ViewModel?.Remove();
         }
 
-        private void SaveToolClicked(object sender, RoutedEventArgs e)
+        private async void SaveToolClicked(object sender, RoutedEventArgs e)
         {
-            ViewModel?.Save();
+            await ViewModel?.SaveAsync();
         }
         #endregion
 
