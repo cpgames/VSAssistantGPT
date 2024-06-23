@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace cpGames.VSA.ViewModel
@@ -93,7 +94,7 @@ namespace cpGames.VSA.ViewModel
             RemoveAction?.Invoke();
         }
 
-        public void Save()
+        public async Task SaveAsync()
         {
             if (!ProjectUtils.ActiveProject.ValidateSettings())
             {
@@ -114,7 +115,7 @@ namespace cpGames.VSA.ViewModel
                 OutputWindowHelper.LogError(e);
                 return;
             }
-            ProjectUtils.ActiveProject.ReloadToolset();
+            await ProjectUtils.ActiveProject.ReloadToolsetAsync();
             Modified = false;
         }
 

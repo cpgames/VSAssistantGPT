@@ -28,9 +28,13 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="1" Content="Ask Assistant" FontWeight="Bold" HorizontalAlignment="Center" />
-
+                <Button Grid.Column="2"
+                        Style="{StaticResource ImageButtonStyle}"
+                        Tag="x"
+                        Click="CloseClicked" />
             </Grid>
         </Border>
         <local:ThreadControl Grid.Row="1" DataContext="{Binding Thread}" Margin="5" />

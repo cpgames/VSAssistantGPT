@@ -80,7 +80,7 @@ namespace cpGames.VSA.Wpf
             // if tab 'Tools' is selected
             else if (e.Source is TabControl { SelectedIndex: 2 })
             {
-                ViewModel.LoadToolset();
+                await ViewModel.LoadToolsetAsync();
             }
         }
 
@@ -160,7 +160,7 @@ namespace cpGames.VSA.Wpf
 
         private void AddToolClicked(object sender, RoutedEventArgs e)
         {
-            ViewModel.CreateTool();
+            ViewModel.CreateToolAsync();
         }
 
         private async void LoadFilesClicked(object sender, RoutedEventArgs e)
@@ -268,9 +268,9 @@ namespace cpGames.VSA.Wpf
             }
         }
 
-        private void ReloadToolsClicked(object sender, RoutedEventArgs e)
+        private async void ReloadToolsClicked(object sender, RoutedEventArgs e)
         {
-            ViewModel.ReloadToolset();
+            await ViewModel.ReloadToolsetAsync();
         }
         #endregion
 

@@ -14,10 +14,6 @@ namespace cpGames.VSA
     public delegate Task<string> ToolCallback(string funcJson);
     public static class ToolAPI
     {
-        #region Fields
-        private static bool _pythonEngineInitialized  ;
-        #endregion
-
         #region Constructors
         static ToolAPI()
         {
@@ -34,9 +30,10 @@ namespace cpGames.VSA
         #endregion
 
         #region Methods
-        private static bool InitializePythonEngine()
+        private static async Task<bool> InitializePythonEngineAsync()
         {
-            if (_pythonEngineInitialized)
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            if (PythonEngine.IsInitialized)
             {
                 return true;
             }
@@ -58,12 +55,12 @@ namespace cpGames.VSA
                 PythonEngine.Initialize();
                 PythonEngine.BeginAllowThreads();
                 RegisterPythonCallbacks();
-                _pythonEngineInitialized = true;
+                await OutputWindowHelper.LogInfoAsync("PythonEngine", "PythonEngine initialized.");
                 return true;
             }
             catch (Exception ex)
             {
-                OutputWindowHelper.LogError(ex);
+                await OutputWindowHelper.LogErrorAsync(ex);
             }
             return false;
         }
@@ -136,7 +133,7 @@ namespace cpGames.VSA
 
         public static async Task<string> HandleToolCallAsync(JToken toolCall)
         {
-            if (!InitializePythonEngine())
+            if (!await InitializePythonEngineAsync())
             {
                 return GetResponseError("PythonEngine not initialized");
             }
@@ -160,19 +157,17 @@ namespace cpGames.VSA
             return result;
         }
 
-        public static bool GetToolset(out string? toolsetJson)
+        public static async Task<string?> GetToolsetAsync()
         {
-            if (!InitializePythonEngine())
+            if (!await InitializePythonEngineAsync())
             {
-                toolsetJson = null;
-                return false;
+                return null;
             }
             using (Py.GIL())
             {
                 dynamic tools = Py.Import("AssistantTools");
                 var toolset = tools.get_tools_info().ToString();
-                toolsetJson = toolset;
-                return true;
+                return toolset;
             }
         }
 
