@@ -16,9 +16,9 @@ namespace cpGames.VSA.Wpf
     {
         #region Fields
         private readonly DialogWindow _dialogWindow;
+        private bool _isClosing;
         private bool _isDragging;
         private Point _startPoint;
-        private bool _isClosing;
         #endregion
 
         #region Properties
@@ -98,6 +98,15 @@ namespace cpGames.VSA.Wpf
         {
             _isClosing = true;
             _dialogWindow.Close();
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                _isClosing = true;
+                _dialogWindow.Close();
+            }
         }
         #endregion
     }

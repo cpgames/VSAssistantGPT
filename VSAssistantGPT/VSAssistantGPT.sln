@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSAssistantGPT", "VSAssistantGPT\VSAssistantGPT.csproj", "{E1AF0A7B-EE67-4122-927D-144971AF6438}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Python.Runtime", "..\..\..\pythonnet\src\runtime\Python.Runtime.csproj", "{9F34A042-41E0-4F4F-B5F7-2E1F85707764}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Python.Runtime", "..\pythonnet\src\runtime\Python.Runtime.csproj", "{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,24 +43,24 @@ Global
 		{E1AF0A7B-EE67-4122-927D-144971AF6438}.TraceAlloc|arm64.Build.0 = Release|arm64
 		{E1AF0A7B-EE67-4122-927D-144971AF6438}.TraceAlloc|x86.ActiveCfg = Release|x86
 		{E1AF0A7B-EE67-4122-927D-144971AF6438}.TraceAlloc|x86.Build.0 = Release|x86
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|arm64.ActiveCfg = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|arm64.Build.0 = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Debug|x86.Build.0 = Debug|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|arm64.ActiveCfg = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|arm64.Build.0 = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|x86.ActiveCfg = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.Release|x86.Build.0 = Release|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|Any CPU.ActiveCfg = TraceAlloc|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|Any CPU.Build.0 = TraceAlloc|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|arm64.ActiveCfg = TraceAlloc|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|arm64.Build.0 = TraceAlloc|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|x86.ActiveCfg = TraceAlloc|Any CPU
-		{9F34A042-41E0-4F4F-B5F7-2E1F85707764}.TraceAlloc|x86.Build.0 = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|arm64.Build.0 = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Debug|x86.Build.0 = Debug|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|arm64.ActiveCfg = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|arm64.Build.0 = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.Release|x86.Build.0 = Release|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|Any CPU.ActiveCfg = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|Any CPU.Build.0 = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|arm64.ActiveCfg = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|arm64.Build.0 = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|x86.ActiveCfg = TraceAlloc|Any CPU
+		{3D1B7798-4BC5-4A90-9768-BC6F5F48AA73}.TraceAlloc|x86.Build.0 = TraceAlloc|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

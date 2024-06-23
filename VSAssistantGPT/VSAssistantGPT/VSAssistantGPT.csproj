@@ -421,8 +421,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\pythonnet\src\runtime\Python.Runtime.csproj">
-      <Project>{9f34a042-41e0-4f4f-b5f7-2e1f85707764}</Project>
+    <ProjectReference Include="..\..\pythonnet\src\runtime\Python.Runtime.csproj">
+      <Project>{3d1b7798-4bc5-4a90-9768-bc6f5f48aa73}</Project>
       <Name>Python.Runtime</Name>
     </ProjectReference>
   </ItemGroup>

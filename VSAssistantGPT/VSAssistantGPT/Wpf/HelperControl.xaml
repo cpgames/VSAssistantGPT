@@ -6,7 +6,8 @@
              xmlns:local="clr-namespace:cpGames.VSA.Wpf"
              mc:Ignorable="d"
              d:DesignHeight="200" d:DesignWidth="400"
-             Background="Transparent">
+             Background="Transparent"
+             KeyDown="OnKeyDown">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
