@@ -179,8 +179,9 @@ namespace cpGames.VSA.Wpf
                 var file = ViewModel.Files[0];
                 await file.DeleteAsync();
             }
-            var projectItems = DTEUtils.GetProjectItemsInActiveProject();
-            foreach (var projectItem in projectItems)
+
+            var solutionItems = DTEUtils.GetSolutionItems();
+            foreach (var projectItem in solutionItems)
             {
                 await OutputWindowHelper.LogInfoAsync("Processor", $"Uploading {projectItem.FileNames[0]}");
                 var fileModel = new FileModel

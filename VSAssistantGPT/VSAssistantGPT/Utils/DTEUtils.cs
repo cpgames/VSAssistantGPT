@@ -104,6 +104,30 @@ namespace cpGames.VSA
             return projectItems;
         }
 
+        public static List<ProjectItem> GetSolutionItems()
+        {
+            var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
+            Assumes.Present(dte);
+            var solutionItems = new List<ProjectItem>();
+            var projects = dte.Solution.Projects.GetEnumerator();
+            while (projects.MoveNext())
+            {
+                var project = projects.Current as Project;
+                if (project == null)
+                {
+                    continue;
+                }
+                var items = project.ProjectItems.GetEnumerator();
+                while (items.MoveNext())
+                {
+                    var currentItem = items.Current as ProjectItem;
+                    var childItem = GetProjectItemsInProjectItem(currentItem, solutionItems);
+                    AppendProjectItem(childItem, solutionItems);
+                }
+            }
+            return solutionItems;
+        }
+
         public static string GetRelativePath(string path)
         {
             var relativePath = path.Replace(GetProjectPath(), "");
