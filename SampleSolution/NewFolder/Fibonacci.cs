@@ -20,6 +20,6 @@ public static class Fibonacci
             a = b;     // Update (n-2)th number to (n-1)th number
             b = c;     // Update (n-1)th number to nth number
         }
-        return c; // Return the nth Fibonacci number
+        return c;
     }
 }

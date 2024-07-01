@@ -155,9 +155,6 @@
     <Compile Include="Wpf\ToolEntryControl.xaml.cs">
       <DependentUpon>ToolEntryControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Wpf\VectorStoreControl.xaml.cs">
-      <DependentUpon>VectorStoreControl.xaml</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\icons\icon.ico">
@@ -415,10 +412,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Wpf\VectorStoreControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\pythonnet\src\runtime\Python.Runtime.csproj">
@@ -426,6 +419,7 @@
       <Name>Python.Runtime</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

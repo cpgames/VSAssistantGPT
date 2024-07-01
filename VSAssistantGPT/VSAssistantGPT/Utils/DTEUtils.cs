@@ -117,10 +117,19 @@ namespace cpGames.VSA
                 {
                     continue;
                 }
-                var items = project.ProjectItems.GetEnumerator();
-                while (items.MoveNext())
+
+                var projectItemsPaths = "";
+                foreach (var projectItem in project.ProjectItems)
                 {
-                    var currentItem = items.Current as ProjectItem;
+                    var currentItem = projectItem as ProjectItem;
+                    if (currentItem == null) continue;
+                    if (currentItem.ContainingProject != project) continue;
+                    projectItemsPaths += currentItem.FileNames[0] + "\n";
+                }
+
+                foreach (var projectItem in project.ProjectItems)
+                {
+                    var currentItem = projectItem as ProjectItem;
                     var childItem = GetProjectItemsInProjectItem(currentItem, solutionItems);
                     AppendProjectItem(childItem, solutionItems);
                 }

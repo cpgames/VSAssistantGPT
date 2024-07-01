@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using cpGames.VSA.RestAPI;
 using Newtonsoft.Json.Linq;
 
@@ -9,13 +10,21 @@ namespace cpGames.VSA.ViewModel
 {
     public class FileViewModel : ViewModel<FileModel>
     {
+        #region FileStatus enum
+        public enum FileStatus
+        {
+            NotSynced,
+            Syncing,
+            Deleting,
+            Synced
+        }
+        #endregion
+
         #region Fields
-        private bool _selected;
-        private Visibility _uploadedVisibility = Visibility.Visible;
+        private FileStatus _status = FileStatus.NotSynced;
         #endregion
 
         #region Properties
-        public Action? RemoveAction { get; set; }
         public string Id
         {
             get => _model.id;
@@ -25,7 +34,7 @@ namespace cpGames.VSA.ViewModel
                 {
                     _model.id = value;
                     OnPropertyChanged();
-                    UploadedVisibility = string.IsNullOrEmpty(value) ? Visibility.Visible : Visibility.Collapsed;
+                    Status = string.IsNullOrEmpty(value) ? FileStatus.NotSynced : FileStatus.Synced;
                 }
             }
         }
@@ -56,107 +65,168 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public bool Selected
+        public bool IsFolder
         {
-            get => _selected;
+            get => _model.isFolder;
             set
             {
-                if (_selected != value)
+                if (_model.isFolder != value)
                 {
-                    _selected = value;
+                    _model.isFolder = value;
                     OnPropertyChanged();
                 }
             }
         }
 
-        public Visibility UploadedVisibility
+        public FileStatus Status
         {
-            get => _uploadedVisibility;
+            get => _status;
             set
             {
-                if (_uploadedVisibility != value)
+                if (_status != value)
                 {
-                    _uploadedVisibility = value;
+                    _status = value;
                     OnPropertyChanged();
+                    if (Parent != null)
+                    {
+                        if (Parent.Children.All(x => x.Status == FileStatus.Synced))
+                        {
+                            Parent.Status = FileStatus.Synced;
+                        }
+                        else if (Parent.Children.Any(x => x.Status == FileStatus.Syncing))
+                        {
+                            Parent.Status = FileStatus.Syncing;
+                        }
+                        else if (Parent.Children.Any(x => x.Status == FileStatus.Deleting))
+                        {
+                            Parent.Status = FileStatus.Deleting;
+                        }
+                        else
+                        {
+                            Parent.Status = FileStatus.NotSynced;
+                        }
+                    }
                 }
             }
         }
+
+        public FileViewModel? Parent { get; set; }
+        public ObservableCollection<FileViewModel> Children { get; } = new();
         #endregion
 
         #region Constructors
         public FileViewModel(FileModel model) : base(model)
         {
-            UploadedVisibility = string.IsNullOrEmpty(Id) ? Visibility.Visible : Visibility.Collapsed;
+            if (string.IsNullOrEmpty(model.id))
+            {
+                Status = FileStatus.NotSynced;
+            }
+            else
+            {
+                Status = FileStatus.Synced;
+            }
+            Children.CollectionChanged += (sender, args) =>
+            {
+                Status = Children.All(x => x.Status == FileStatus.Synced) ? FileStatus.Synced : FileStatus.NotSynced;
+            };
         }
         #endregion
 
         #region Methods
         public async Task DeleteAsync()
         {
-            if (string.IsNullOrEmpty(Id))
+            if (!IsFolder)
             {
-                await OutputWindowHelper.LogErrorAsync("File is not uploaded yet.");
-                return;
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return;
+                }
+
+                if (!ProjectUtils.ActiveProject.ValidateSettings())
+                {
+                    return;
+                }
+
+                try
+                {
+                    var request = new DeleteFileRequest(Id);
+                    await request.SendAsync();
+                    Id = string.Empty;
+                }
+                catch (Exception e)
+                {
+                    await OutputWindowHelper.LogErrorAsync(e);
+                    ProjectUtils.ActiveProject.Working = false;
+                }
             }
-            if (!ProjectUtils.ActiveProject.ValidateSettings())
+            else if (IsFolder)
             {
-                return;
+                foreach (var child in Children)
+                {
+                    await child.DeleteAsync();
+                }
             }
-            try
-            {
-                var request = new DeleteFileRequest(Id);
-                await request.SendAsync();
-            }
-            catch (Exception e)
-            {
-                await OutputWindowHelper.LogErrorAsync(e);
-                ProjectUtils.ActiveProject.Working = false;
-            }
-            RemoveAction?.Invoke();
         }
 
-        public async Task UploadAsync()
+        public async Task SyncAsync()
         {
-            if (!string.IsNullOrEmpty(Id))
+            if (Status != FileStatus.NotSynced)
             {
-                await OutputWindowHelper.LogErrorAsync("File is already uploaded.");
                 return;
             }
-            try
-            {
-                var tmpDir = Utils.GetOrCreateAppDir("tmp");
-                string tmpFilePath;
-                if (!Path.StartsWith(tmpDir))
-                {
-                    var content = File.ReadAllText(Path);
-                    var relativePath = DTEUtils.GetRelativePath(Path);
 
-                    var fileObject = new JObject
+            Status = FileStatus.Syncing;
+            if (!IsFolder)
+            {
+                try
+                {
+                    var tmpDir = Utils.GetOrCreateAppDir("tmp");
+                    string tmpFilePath;
+                    if (!Path.StartsWith(tmpDir))
                     {
-                        ["path"] = relativePath,
-                        ["data"] = content
-                    };
+                        var content = File.ReadAllText(Path);
+                        var relativePath = DTEUtils.GetRelativePath(Path);
 
-                    tmpFilePath = System.IO.Path.Combine(tmpDir, System.IO.Path.GetFileName(Path));
-                    File.WriteAllText(tmpFilePath, fileObject.ToString());
+                        var fileObject = new JObject
+                        {
+                            ["path"] = relativePath,
+                            ["data"] = content
+                        };
+
+                        tmpFilePath = System.IO.Path.Combine(tmpDir, System.IO.Path.GetFileName(Path));
+                        File.WriteAllText(tmpFilePath, fileObject.ToString());
+                    }
+                    else
+                    {
+                        tmpFilePath = Path;
+                    }
+
+                    // Upload the file
+                    var uploadFileRequest = new UploadFileRequest(tmpFilePath);
+                    var uploadFileResponse = await uploadFileRequest.SendAsync();
+                    Id = uploadFileResponse.id;
+
+                    var createVectorStoreFileRequest = new CreateVectorStoreFileRequest(ProjectUtils.ActiveProject.VectorStoreViewModel!.Id, Id);
+                    await createVectorStoreFileRequest.SendAsync();
+
+                    // Delete the temporary file
+                    File.Delete(tmpFilePath);
+                    ProjectUtils.ActiveProject.Save();
                 }
-                else
+                catch (Exception e)
                 {
-                    tmpFilePath = Path;
+                    await OutputWindowHelper.LogErrorAsync(e);
+                    ProjectUtils.ActiveProject.Working = false;
                 }
 
-                // Upload the file
-                var request = new UploadFileRequest(tmpFilePath);
-                var response = await request.SendAsync();
-                Id = response.id;
-
-                // Delete the temporary file
-                File.Delete(tmpFilePath);
+                Status = FileStatus.Synced;
             }
-            catch (Exception e)
+            else if (IsFolder)
             {
-                await OutputWindowHelper.LogErrorAsync(e);
-                ProjectUtils.ActiveProject.Working = false;
+                foreach (var child in Children)
+                {
+                    await child.SyncAsync();
+                }
             }
         }
         #endregion

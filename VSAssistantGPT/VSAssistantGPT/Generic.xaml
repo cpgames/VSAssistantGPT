@@ -7,6 +7,11 @@
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <local:BoolToVisibilityInvConverter x:Key="BoolToVisibilityInvConverter" />
     <local:BoolToInvBoolConverter x:Key="BoolToInvBoolConverter" />
+    <local:PathToFolderConverter x:Key="PathToFolderConverter" />
+    <local:FileStatusToTextConverter x:Key="FileStatusToTextConverter" />
+    <local:FileStatusToColorConverter x:Key="FileStatusToColorConverter" />
+    <local:SyncedFileStatusToVisibilityConverter x:Key="SyncedFileStatusToVisibilityConverter" />
+    <local:NotSyncedFileStatusToVisibilityConverter x:Key="NotSyncedFileStatusToVisibilityConverter" />
     <!-- Converters -->
 
     <!-- Flat ComboBox -->

@@ -99,20 +99,6 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public string VectorStoreId
-        {
-            get => _model.vectorStoreId;
-            set
-            {
-                if (_model.vectorStoreId != value)
-                {
-                    _model.vectorStoreId = value;
-                    OnPropertyChanged();
-                    Modified = true;
-                }
-            }
-        }
-
         public bool IsTemplate
         {
             get => _isTemplate;

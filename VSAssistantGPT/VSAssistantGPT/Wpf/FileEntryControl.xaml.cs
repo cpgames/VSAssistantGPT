@@ -1,10 +1,11 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using cpGames.VSA.ViewModel;
 
 namespace cpGames.VSA.Wpf
 {
     /// <summary>
-    /// Interaction logic for FileEntryControl.xaml
+    ///     Interaction logic for FileEntryControl.xaml
     /// </summary>
     public partial class FileEntryControl : UserControl
     {
@@ -20,6 +21,18 @@ namespace cpGames.VSA.Wpf
         public FileEntryControl()
         {
             InitializeComponent();
+        }
+        #endregion
+
+        #region Methods
+        private async void DeleteClicked(object sender, RoutedEventArgs e)
+        {
+            await ViewModel?.DeleteAsync();
+        }
+
+        private async void SyncClicked(object sender, RoutedEventArgs e)
+        {
+            await ViewModel?.SyncAsync();
         }
         #endregion
     }

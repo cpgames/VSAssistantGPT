@@ -47,7 +47,7 @@ namespace TicTacToeGame
             }
         }
 
-        // Implementation of the missing method
+        // Implementation of the missing method 
         public int GetBoardSize()
         {
             return size;
