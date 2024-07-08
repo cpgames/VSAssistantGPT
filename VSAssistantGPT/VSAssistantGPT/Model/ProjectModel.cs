@@ -9,9 +9,8 @@ namespace cpGames.VSA
         public string apiKey = "";
         public string pythonDll = "";
         public string selectedAssistant = "";
-        public bool sync = true;
         public AssistantModel newAssistantTemplate = new();
-        public List<FileModel> files = new();
+        public List<FileModel> fileCache = new();
         #endregion
     }
 }

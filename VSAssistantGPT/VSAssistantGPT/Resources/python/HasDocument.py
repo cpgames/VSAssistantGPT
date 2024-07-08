@@ -8,7 +8,7 @@ class HasFile(ToolBase):
     description = "Check if a document exists."
     category = "Programming"
     arguments = [
-        Argument("relative_path", "string", "Relative path of the document."),
+        Argument("document_path", "string", "Absolute path of the document.")
         ]
     
     def call(self, function, tool_callback):

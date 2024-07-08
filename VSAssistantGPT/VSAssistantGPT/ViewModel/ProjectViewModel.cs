@@ -20,10 +20,14 @@ namespace cpGames.VSA.ViewModel
     public class ProjectViewModel : ViewModel<ProjectModel>
     {
         #region Fields
-        private readonly DocumentEvents _documentEvents;
-        private readonly ProjectItemsEvents _projectItemsEvents;
-        private readonly SolutionEvents _solutionEvents;
+        private DocumentEvents _documentEvents;
+        private List<Document> _documentsSaved = new();
+        private readonly List<ProjectItem> _itemsAdded = new();
+        private List<ProjectItem> _itemsRemoved = new();
+        private readonly List<FileRenamed> _itemsRenamed = new();
         private bool _modified;
+        private ProjectItemsEvents _projectItemsEvents;
+        private SolutionEvents _solutionEvents;
         private VectorStoreViewModel? _vectorStoreViewModel;
         private bool _working;
         #endregion
@@ -98,20 +102,6 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public bool Sync
-        {
-            get => _model.sync;
-            set
-            {
-                if (_model.sync != value)
-                {
-                    _model.sync = value;
-                    OnPropertyChanged();
-                    Modified = true;
-                }
-            }
-        }
-
         public bool Working
         {
             get => _working;
@@ -153,7 +143,7 @@ namespace cpGames.VSA.ViewModel
 
         public ThreadViewModel Thread { get; } = new(new ThreadModel());
 
-        public AssistantViewModel NewAssistantTemplateViewModel { get; }
+        public AssistantViewModel NewAssistantTemplateViewModel { get; private set; }
 
         public ObservableCollection<AssistantViewModel> Assistants { get; } = new();
 
@@ -163,7 +153,11 @@ namespace cpGames.VSA.ViewModel
         #endregion
 
         #region Constructors
-        public ProjectViewModel(ProjectModel projectModel) : base(projectModel)
+        public ProjectViewModel(ProjectModel projectModel) : base(projectModel) { }
+        #endregion
+
+        #region Methods
+        public void Load()
         {
             NewAssistantTemplateViewModel = new AssistantViewModel(_model.newAssistantTemplate)
             {
@@ -180,131 +174,175 @@ namespace cpGames.VSA.ViewModel
             var dte = Package.GetGlobalService(typeof(DTE)) as DTE;
             Assumes.Present(dte);
             _solutionEvents = dte.Events.SolutionEvents;
-            _solutionEvents.Opened += OnSolutionOpened;
             _projectItemsEvents = (ProjectItemsEvents)dte.Events.GetObject("ProjectItemsEvents");
             _projectItemsEvents.ItemAdded += OnItemAdded;
             _projectItemsEvents.ItemRemoved += OnItemRemoved;
             _projectItemsEvents.ItemRenamed += OnItemRenamed;
+            _solutionEvents.Opened += OnSolutionOpened;
+            _solutionEvents.AfterClosing += OnSolutionClosed;
 
             _documentEvents = dte.Events.DocumentEvents;
             _documentEvents.DocumentSaved += OnDocumentSaved;
 
-            // if solution is already opened, load it
-            if (dte.Solution.IsOpen)
+            // listen to the PropertyChanged event Thread IsRunning property
+            Thread.PropertyChanged += (sender, args) =>
             {
-                OnSolutionOpened();
-            }
+                if (args.PropertyName == nameof(ThreadViewModel.IsRunning))
+                {
+                    if (!Thread.IsRunning)
+                    {
+                        ThreadFinished();
+                    }
+                }
+            };
         }
-        #endregion
 
-        #region Methods
+        private async void ThreadFinished()
+        {
+
+        }
+
         private async void OnSolutionOpened()
         {
             await LoadSolutionAsync();
         }
 
+        private void OnSolutionClosed()
+        {
+            Files.Clear();
+            Model.fileCache.Clear();
+            Modified = false;
+        }
+
         private async void OnItemRenamed(ProjectItem item, string oldName)
         {
-            List<FileViewModel> files = new();
-            GetAllFiles(files);
-            var fileViewModel = files.FirstOrDefault(x => x.Path == oldName);
-            if (fileViewModel == null)
+            if (Thread.IsRunning)
             {
+                _itemsRenamed.Add(new FileRenamed
+                {
+                    item = item,
+                    oldName = oldName
+                });
                 return;
             }
 
-            if (fileViewModel.Status == FileViewModel.FileStatus.Synced)
+            var file = GetAllFiles().FirstOrDefault(x => x.Path == oldName);
+            var fileSynced = false;
+            if (file != null)
             {
-                await fileViewModel.DeleteAsync();
-            }
-
-            Model.files.Remove(fileViewModel.Model);
-            if (fileViewModel.Parent != null)
-            {
-                fileViewModel.Parent.Children.Remove(fileViewModel);
-                var folderFileViewModel = fileViewModel.Parent;
-
-                // remove empty folders iterating to root folder
-                while (folderFileViewModel.Children.Count == 0)
+                fileSynced = file.Status == FileViewModel.FileStatus.Synced;
+                if (fileSynced)
                 {
-                    var parent = folderFileViewModel.Parent;
-                    parent?.Children.Remove(folderFileViewModel);
-                    folderFileViewModel = parent;
-                    if (folderFileViewModel == null)
+                    await file.DeleteAsync();
+                }
+
+                Model.fileCache.Remove(file.Model);
+                Save();
+
+                var current = file;
+                while (current.Parent != null)
+                {
+                    current.Parent.Children.Remove(current);
+
+                    if (current.Parent.Children.Count > 0)
                     {
                         break;
                     }
+
+                    current = current.Parent;
+                }
+
+                if (current.Parent == null && current.Children.Count == 0)
+                {
+                    Files.Remove(current);
                 }
             }
 
             OnItemAdded(item);
+
+            file = GetAllFiles().FirstOrDefault(x => x.Path == item.FileNames[0]);
+            if (file != null && fileSynced)
+            {
+                await file.SyncAsync();
+            }
         }
 
         private async void OnItemAdded(ProjectItem item)
         {
+            if (Thread.IsRunning)
+            {
+                _itemsAdded.Add(item);
+                return;
+            }
+
             if (item is { Kind: Constants.vsProjectItemKindPhysicalFile } &&
                 Utils.StringMatchesRegex(item.Name, DTEUtils.SUPPORTED_FILE_EXTENSIONS_REGEX))
             {
-                var projectPath = Path.GetDirectoryName(item.ContainingProject.FullName)!;
-                var relativePath = item.FileNames[0].Substring(projectPath.Length + 1);
-                var folders = relativePath.Split(Path.DirectorySeparatorChar);
-                var currentFolderPath = projectPath;
-                var projectFileViewModel = Files.FirstOrDefault(x => x.Path == projectPath);
-                if (projectFileViewModel == null)
+                var files = GetAllFiles();
+                var folderPath = Path.GetDirectoryName(item.FileNames[0])!;
+                var relativePath = string.Empty;
+                FileViewModel? parent = null;
+                while (folderPath.Length > 0)
                 {
-                    projectFileViewModel = new FileViewModel(new FileModel
+                    parent = files.FirstOrDefault(x => x.Path == folderPath);
+                    if (parent != null)
                     {
-                        name = item.ContainingProject.Name,
-                        path = projectPath,
-                        isFolder = true
-                    });
-                    Files.Add(projectFileViewModel);
-                }
-
-                var folderFileViewModel = projectFileViewModel;
-                for (var index = 0; index < folders.Length - 1; index++)
-                {
-                    var folderName = folders[index];
-                    currentFolderPath = Path.Combine(currentFolderPath, folderName);
-                    folderFileViewModel =
-                        projectFileViewModel.Children.FirstOrDefault(x => x.Path == currentFolderPath);
-                    if (folderFileViewModel == null)
-                    {
-                        folderFileViewModel = new FileViewModel(new FileModel
-                        {
-                            name = folderName,
-                            path = currentFolderPath,
-                            isFolder = true
-                        })
-                        {
-                            Parent = projectFileViewModel,
-                            Status = FileViewModel.FileStatus.Synced
-                        };
-                        projectFileViewModel.Children.Add(folderFileViewModel);
+                        break;
                     }
-                }
 
-                var fileModel = Model.files.FirstOrDefault(x => x.path == item.FileNames[0]);
-                if (fileModel == null)
-                {
-                    fileModel = new FileModel
+                    // remove last folder from folderPath and add it to relativePath
+                    var index = folderPath.LastIndexOf(Path.DirectorySeparatorChar);
+                    if (index == -1)
                     {
-                        name = item.Name,
-                        path = item.FileNames[0]
-                    };
-                    Model.files.Add(fileModel);
+                        break;
+                    }
+
+                    relativePath = folderPath.Substring(index + 1) + Path.DirectorySeparatorChar + relativePath;
+                    folderPath = folderPath.Substring(0, index);
                 }
 
-                var fileViewModel = new FileViewModel(fileModel)
+                var file = new FileViewModel(new FileModel
                 {
-                    Parent = folderFileViewModel
-                };
-                var parentStatus = folderFileViewModel.Status;
-                folderFileViewModel.Children.Add(fileViewModel);
+                    name = item.Name,
+                    path = item.FileNames[0]
+                });
+                Model.fileCache.Add(file.Model);
 
-                if (parentStatus == FileViewModel.FileStatus.Synced)
+                if (parent == null)
                 {
-                    await fileViewModel.SyncAsync();
+                    Files.Add(file);
+                    await file.SyncAsync();
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(relativePath))
+                    {
+                        var folders = relativePath.Split(new[] { Path.DirectorySeparatorChar },
+                            StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var folder in folders)
+                        {
+                            var newParent = new FileViewModel(new FileModel
+                            {
+                                name = folder,
+                                path = parent.Path + Path.DirectorySeparatorChar + folder,
+                                isFolder = true
+                            })
+                            {
+                                Status = parent.Status
+                            };
+                            parent.Children.Add(newParent);
+                            newParent.Parent = parent;
+                            parent = newParent;
+                        }
+                    }
+
+                    var parentSynced = parent.Status == FileViewModel.FileStatus.Synced;
+                    parent.Children.Add(file);
+                    file.Parent = parent;
+                    if (parentSynced)
+                    {
+                        await file.SyncAsync();
+                    }
                 }
 
                 Save();
@@ -313,108 +351,80 @@ namespace cpGames.VSA.ViewModel
 
         private async void OnItemRemoved(ProjectItem item)
         {
+            if (Thread.IsRunning)
+            {
+                _itemsAdded.RemoveAll(x => x.FileNames[0] == item.FileNames[0]);
+                _itemsRenamed.RemoveAll(x => x.item.FileNames[0] == item.FileNames[0]);
+                _documentsSaved.RemoveAll(x => x.Path == item.FileNames[0]);
+                _itemsRemoved.Add(item);
+                return;
+            }
             if (item is { Kind: Constants.vsProjectItemKindPhysicalFile } &&
                 Utils.StringMatchesRegex(item.Name, DTEUtils.SUPPORTED_FILE_EXTENSIONS_REGEX))
             {
-                var projectPath = Path.GetDirectoryName(item.ContainingProject.FullName)!;
-                var projectFileViewModel = Files.FirstOrDefault(x => x.Path == projectPath);
-                if (projectFileViewModel == null)
+                var fileName = item.FileNames[0]!;
+                var files = GetAllFiles();
+                var file = files.FirstOrDefault(x => x.Path == fileName);
+                if (file == null)
                 {
                     return;
                 }
 
-                var relativePath = item.FileNames[0].Substring(projectPath.Length + 1);
-                var folders = relativePath.Split(Path.DirectorySeparatorChar);
-                var currentFolderPath = projectPath;
-                var folderFileViewModel = projectFileViewModel;
-                for (var index = 0; index < folders.Length - 1; index++)
+                if (file.Status == FileViewModel.FileStatus.Synced)
                 {
-                    var folderName = folders[index];
-                    currentFolderPath = Path.Combine(currentFolderPath, folderName);
-                    folderFileViewModel =
-                        projectFileViewModel.Children.FirstOrDefault(x => x.Path == currentFolderPath);
-                    if (folderFileViewModel == null)
+                    await file.DeleteAsync();
+                }
+
+                Model.fileCache.Remove(file.Model);
+                Save();
+
+                var current = file;
+                while (current.Parent != null)
+                {
+                    current.Parent.Children.Remove(current);
+
+                    if (current.Parent.Children.Count > 0)
                     {
-                        return;
+                        break;
                     }
+
+                    current = current.Parent;
                 }
 
-                var fileModel = Model.files.FirstOrDefault(x => x.path == item.FileNames[0]);
-                if (fileModel == null)
+                if (current.Parent == null && current.Children.Count == 0)
                 {
-                    return;
-                }
-
-                var fileViewModel = folderFileViewModel.Children.FirstOrDefault(x => x.Path == item.FileNames[0]);
-                if (fileViewModel == null)
-                {
-                    return;
-                }
-
-                if (fileViewModel.Status == FileViewModel.FileStatus.Synced)
-                {
-                    await DeleteFileAsync(fileViewModel);
-                    Save();
-                }
-
-                folderFileViewModel.Children.Remove(fileViewModel);
-                Model.files.Remove(fileModel);
-
-                // remove empty folders iterating to root folder
-                while (folderFileViewModel != projectFileViewModel && folderFileViewModel.Children.Count == 0)
-                {
-                    var parent = folderFileViewModel.Parent;
-                    parent?.Children.Remove(folderFileViewModel);
-                    folderFileViewModel = parent;
+                    Files.Remove(current);
                 }
             }
         }
 
         private async void OnDocumentSaved(Document document)
         {
+            if (Thread.IsRunning)
+            {
+                if (!_documentsSaved.Contains(document))
+                {
+                    _documentsSaved.Add(document);
+                }
+                _documentsSaved.Add(document);
+                return;
+            }
             var item = document.ProjectItem;
             if (item is { Kind: Constants.vsProjectItemKindPhysicalFile } &&
                 Utils.StringMatchesRegex(item.Name, DTEUtils.SUPPORTED_FILE_EXTENSIONS_REGEX))
             {
-                var projectPath = Path.GetDirectoryName(item.ContainingProject.FullName)!;
-                var relativePath = item.FileNames[0].Substring(projectPath.Length + 1);
-                var folders = relativePath.Split(Path.DirectorySeparatorChar);
-                var currentFolderPath = projectPath;
-                var projectFileViewModel = Files.FirstOrDefault(x => x.Path == projectPath);
-                if (projectFileViewModel == null)
+                var fileName = item.FileNames[0]!;
+                var files = GetAllFiles();
+                var file = files.FirstOrDefault(x => x.Path == fileName);
+                if (file == null)
                 {
                     return;
                 }
 
-                var folderFileViewModel = projectFileViewModel;
-                for (var index = 0; index < folders.Length - 1; index++)
+                if (file.Status == FileViewModel.FileStatus.Synced)
                 {
-                    var folderName = folders[index];
-                    currentFolderPath = Path.Combine(currentFolderPath, folderName);
-                    folderFileViewModel =
-                        projectFileViewModel.Children.FirstOrDefault(x => x.Path == currentFolderPath);
-                    if (folderFileViewModel == null)
-                    {
-                        return;
-                    }
-                }
-
-                var fileModel = Model.files.FirstOrDefault(x => x.path == item.FileNames[0]);
-                if (fileModel == null)
-                {
-                    return;
-                }
-
-                var fileViewModel = folderFileViewModel.Children.FirstOrDefault(x => x.Path == item.FileNames[0]);
-                if (fileViewModel == null)
-                {
-                    return;
-                }
-
-                if (fileViewModel.Status == FileViewModel.FileStatus.Synced)
-                {
-                    await fileViewModel.DeleteAsync();
-                    await fileViewModel.SyncAsync();
+                    await file.DeleteAsync();
+                    await file.SyncAsync();
                     Save();
                 }
             }
@@ -613,181 +623,222 @@ namespace cpGames.VSA.ViewModel
 
         public async Task LoadSolutionAsync()
         {
-            var filesToDelete = new List<FileModel>(Model.files);
-            var solutionItems = DTEUtils.GetSolutionItems();
-            foreach (var item in solutionItems)
+            try
             {
-                var name = item.Name;
-                var filePath = item.FileNames[0];
-                var projectPath = Path.GetDirectoryName(item.ContainingProject.FullName)!;
-                var projectFileViewModel = Files.FirstOrDefault(x => x.Path == projectPath);
-                if (projectFileViewModel == null)
+                Files.Clear();
+                if (!ValidateSettings())
                 {
-                    projectFileViewModel = new FileViewModel(new FileModel
-                    {
-                        name = item.ContainingProject.Name,
-                        path = projectPath,
-                        isFolder = true
-                    });
-                    Files.Add(projectFileViewModel);
+                    return;
                 }
 
-                var relativePath = filePath.Substring(projectPath.Length + 1);
-                var folders = relativePath.Split(Path.DirectorySeparatorChar);
-                var currentFolderPath = projectPath;
-                var folderFileViewModel = projectFileViewModel;
-                for (var index = 0; index < folders.Length - 1; index++)
+                var filesToDelete = new List<FileModel>(Model.fileCache);
+                var solutionItems = DTEUtils.GetSolutionItems();
+                foreach (var item in solutionItems)
                 {
-                    var folderName = folders[index];
-                    currentFolderPath = Path.Combine(currentFolderPath, folderName);
-                    folderFileViewModel =
-                        projectFileViewModel.Children.FirstOrDefault(x => x.Path == currentFolderPath);
+                    var name = item.Name;
+                    var filePath = item.FileNames[0]!;
+                    var folders = filePath.Split(Path.DirectorySeparatorChar);
+                    var currentFolderPath = string.Empty;
+                    FileViewModel? folderFileViewModel = null;
+                    for (var index = 0; index < folders.Length - 1; index++)
+                    {
+                        var folderName = folders[index];
+                        currentFolderPath = string.IsNullOrEmpty(currentFolderPath)
+                            ? folderName
+                            : currentFolderPath + Path.DirectorySeparatorChar + folderName;
+                        var newFolderFileViewModel = folderFileViewModel != null
+                            ? folderFileViewModel.Children.FirstOrDefault(x => x.Path == currentFolderPath)
+                            : Files.FirstOrDefault(x => x.Path == currentFolderPath);
+                        if (newFolderFileViewModel == null)
+                        {
+                            newFolderFileViewModel = new FileViewModel(new FileModel
+                            {
+                                name = folderName,
+                                path = currentFolderPath,
+                                isFolder = true
+                            })
+                            {
+                                Parent = folderFileViewModel
+                            };
+                            if (folderFileViewModel == null)
+                            {
+                                Files.Add(newFolderFileViewModel);
+                            }
+                            else
+                            {
+                                folderFileViewModel.Children.Add(newFolderFileViewModel);
+                            }
+                        }
+
+                        folderFileViewModel = newFolderFileViewModel;
+                    }
+
+                    var fileModel = Model.fileCache.FirstOrDefault(x => x.path == filePath);
+                    if (fileModel == null)
+                    {
+                        fileModel = new FileModel
+                        {
+                            name = name,
+                            path = filePath
+                        };
+                        Model.fileCache.Add(fileModel);
+                        Modified = true;
+                    }
+                    else
+                    {
+                        filesToDelete.Remove(fileModel);
+                    }
+
+                    var fileViewModel = new FileViewModel(fileModel)
+                    {
+                        Parent = folderFileViewModel
+                    };
                     if (folderFileViewModel == null)
                     {
-                        folderFileViewModel = new FileViewModel(new FileModel
-                        {
-                            name = folderName,
-                            path = currentFolderPath,
-                            isFolder = true
-                        })
-                        {
-                            Parent = projectFileViewModel
-                        };
-                        projectFileViewModel.Children.Add(folderFileViewModel);
+                        Files.Add(fileViewModel);
+                    }
+                    else
+                    {
+                        folderFileViewModel.Children.Add(fileViewModel);
                     }
                 }
 
-                var fileModel = Model.files.FirstOrDefault(x => x.path == filePath);
-                if (fileModel == null)
+                TrimParentFolders();
+
+                foreach (var fileToDelete in filesToDelete)
                 {
-                    fileModel = new FileModel
+                    Model.fileCache.Remove(fileToDelete);
+                    Modified = true;
+                }
+
+                var filesIdsToRemove = new List<string>();
+                var filesSynced = new List<FileViewModel>();
+                var listFilesRequest = new ListFilesRequest();
+                var listFilesResponse = await listFilesRequest.SendAsync();
+                JArray data = listFilesResponse.data;
+                await OutputWindowHelper.LogInfoAsync(
+                    "Resources",
+                    $"{data.Count} files retrieved from the server...");
+                var files = GetAllFiles();
+                foreach (var file in data)
+                {
+                    var fileId = file["id"]!.ToString();
+                    var fileModel = files.FirstOrDefault(x => x.Id == fileId);
+                    if (fileModel == null)
                     {
-                        name = name,
-                        path = filePath
-                    };
-                    Model.files.Add(fileModel);
-                    Modified = true;
+                        filesIdsToRemove.Add(fileId);
+                    }
+                    else
+                    {
+                        filesSynced.Add(fileModel);
+                    }
+                }
+
+                if (filesIdsToRemove.Count > 0)
+                {
+                    await OutputWindowHelper.LogInfoAsync(
+                        "Resources",
+                        $"Removing {filesIdsToRemove.Count} unused files...");
+                }
+
+                foreach (var fileIdToRemove in filesIdsToRemove)
+                {
+                    var request = new DeleteFileRequest(fileIdToRemove);
+                    await request.SendAsync();
+                }
+
+                foreach (var file in files)
+                {
+                    if (!string.IsNullOrEmpty(file.Id) && !filesSynced.Contains(file))
+                    {
+                        file.Id = "";
+                        Modified = true;
+                    }
+                }
+
+                if (Modified)
+                {
+                    Save();
+                }
+
+                var listVectorStoresRequest = new ListVectorStoresRequest();
+                var listVectorStoresResponse = await listVectorStoresRequest.SendAsync();
+                JArray vectorStores = listVectorStoresResponse.data;
+                await OutputWindowHelper.LogInfoAsync(
+                    "Resources",
+                    $"{vectorStores.Count} vector stores retrieved from the server...");
+                // we just want to keep a single vector store, delete the rest
+                for (var index = 1; index < vectorStores.Count; index++)
+                {
+                    var vectorStoreId = vectorStores[index]["id"]!.ToString();
+                    await OutputWindowHelper.LogInfoAsync(
+                        "Resources",
+                        $"Removing vector store {vectorStoreId}...");
+                    var deleteVectorStoreRequest = new DeleteVectorStoreRequest(vectorStoreId);
+                    await deleteVectorStoreRequest.SendAsync();
+                }
+
+                // if there is no vector store, create one
+                if (vectorStores.Count == 1)
+                {
+                    var vectorStoreId = vectorStores[0]["id"]!.ToString();
+                    var vectorStoreViewModel = new VectorStoreViewModel(new VectorStoreModel
+                    {
+                        id = vectorStoreId
+                    });
+                    VectorStoreViewModel = vectorStoreViewModel;
                 }
                 else
                 {
-                    filesToDelete.Remove(fileModel);
+                    await OutputWindowHelper.LogInfoAsync(
+                        "Resources",
+                        "Creating a new vector store...");
+                    var createVectorStoreRequest = new CreateVectorStoreRequest();
+                    var createVectorStoreResponse = await createVectorStoreRequest.SendAsync();
+                    var vectorStoreId = createVectorStoreResponse.data["id"]!.ToString();
+                    var vectorStoreViewModel = new VectorStoreViewModel(new VectorStoreModel
+                    {
+                        id = vectorStoreId
+                    });
+                    VectorStoreViewModel = vectorStoreViewModel;
                 }
 
-                var fileViewModel = new FileViewModel(fileModel)
-                {
-                    Parent = folderFileViewModel
-                };
-                folderFileViewModel.Children.Add(fileViewModel);
+                await VectorStoreViewModel.SyncAsync();
             }
-
-            foreach (var fileToDelete in filesToDelete)
+            catch (Exception e)
             {
-                Model.files.Remove(fileToDelete);
-                Modified = true;
+                await OutputWindowHelper.LogErrorAsync(e);
+                throw;
             }
+        }
 
-            var filesIdsToRemove = new List<string>();
-            var filesSynced = new List<FileViewModel>();
-            var listFilesRequest = new ListFilesRequest();
-            var listFilesResponse = await listFilesRequest.SendAsync();
-            JArray data = listFilesResponse.data;
-            await OutputWindowHelper.LogInfoAsync(
-                "Resources",
-                $"{data.Count} files retrieved from the server...");
-            var allFiles = new List<FileViewModel>();
-            GetAllFiles(allFiles);
-            foreach (var file in data)
+        private void TrimParentFolders()
+        {
+            while (Files.Count == 1)
             {
-                var fileId = file["id"]!.ToString();
-                var fileModel = allFiles.FirstOrDefault(x => x.Id == fileId);
-                if (fileModel == null)
+                var file = Files[0];
+                if (!file.IsFolder)
                 {
-                    filesIdsToRemove.Add(fileId);
+                    break;
                 }
-                else
+
+                Files.Clear();
+                foreach (var child in file.Children)
                 {
-                    filesSynced.Add(fileModel);
+                    child.Parent = null;
+                    Files.Add(child);
                 }
-            }
 
-            if (filesIdsToRemove.Count > 0)
-            {
-                await OutputWindowHelper.LogInfoAsync(
-                    "Resources",
-                    $"Removing {filesIdsToRemove.Count} unused files...");
+                file.Children.Clear();
             }
-
-            foreach (var fileIdToRemove in filesIdsToRemove)
-            {
-                var request = new DeleteFileRequest(fileIdToRemove);
-                await request.SendAsync();
-            }
-
-            foreach (var file in allFiles)
-            {
-                if (!string.IsNullOrEmpty(file.Id) && !filesSynced.Contains(file))
-                {
-                    file.Id = "";
-                    Modified = true;
-                }
-            }
-
-            if (Modified)
-            {
-                Save();
-            }
-
-            var listVectorStoresRequest = new ListVectorStoresRequest();
-            var listVectorStoresResponse = await listVectorStoresRequest.SendAsync();
-            JArray vectorStores = listVectorStoresResponse.data;
-            await OutputWindowHelper.LogInfoAsync(
-                "Resources",
-                $"{vectorStores.Count} vector stores retrieved from the server...");
-            // we just want to keep a single vector store, delete the rest
-            for (var index = 1; index < vectorStores.Count; index++)
-            {
-                var vectorStoreId = vectorStores[index]["id"]!.ToString();
-                await OutputWindowHelper.LogInfoAsync(
-                    "Resources",
-                    $"Removing vector store {vectorStoreId}...");
-                var deleteVectorStoreRequest = new DeleteVectorStoreRequest(vectorStoreId);
-                await deleteVectorStoreRequest.SendAsync();
-            }
-
-            // if there is no vector store, create one
-            if (vectorStores.Count == 1)
-            {
-                var vectorStoreId = vectorStores[0]["id"]!.ToString();
-                var vectorStoreViewModel = new VectorStoreViewModel(new VectorStoreModel
-                {
-                    id = vectorStoreId
-                });
-                VectorStoreViewModel = vectorStoreViewModel;
-            }
-            else
-            {
-                await OutputWindowHelper.LogInfoAsync(
-                    "Resources",
-                    "Creating a new vector store...");
-                var createVectorStoreRequest = new CreateVectorStoreRequest();
-                var createVectorStoreResponse = await createVectorStoreRequest.SendAsync();
-                var vectorStoreId = createVectorStoreResponse.data["id"]!.ToString();
-                var vectorStoreViewModel = new VectorStoreViewModel(new VectorStoreModel
-                {
-                    id = vectorStoreId
-                });
-                VectorStoreViewModel = vectorStoreViewModel;
-            }
-
-            await VectorStoreViewModel.SyncAsync();
         }
 
         private async Task DeleteFileAsync(FileViewModel file)
         {
-            var fileModel = Model.files.FirstOrDefault(x => x.id == file.Id);
+            var fileModel = Model.fileCache.FirstOrDefault(x => x.id == file.Id);
             if (fileModel != null)
             {
-                Model.files.Remove(fileModel);
+                Model.fileCache.Remove(fileModel);
                 Save();
             }
 
@@ -811,25 +862,52 @@ namespace cpGames.VSA.ViewModel
             return true;
         }
 
-        public void GetAllFiles(List<FileViewModel> files)
+        public List<FileViewModel> GetAllFiles()
         {
+            var files = new List<FileViewModel>();
             foreach (var file in Files)
             {
                 GetAllFiles(files, file);
             }
+
+            return files;
         }
 
         private void GetAllFiles(List<FileViewModel> files, FileViewModel current)
         {
-            if (!current.IsFolder)
-            {
-                files.Add(current);
-            }
+            files.Add(current);
 
             foreach (var child in current.Children)
             {
                 GetAllFiles(files, child);
             }
+        }
+
+        public string GetTreePath(string documentPath)
+        {
+            var files = GetAllFiles();
+            var file = files.FirstOrDefault(x => x.Path == documentPath);
+            if (file == null)
+            {
+                return string.Empty;
+            }
+
+            var treePath = file.Name;
+            while (file.Parent != null)
+            {
+                file = file.Parent;
+                treePath = file.Name + Path.DirectorySeparatorChar + treePath;
+            }
+
+            return treePath;
+        }
+        #endregion
+
+        #region Nested type: FileRenamed
+        private struct FileRenamed
+        {
+            public ProjectItem item;
+            public string oldName;
         }
         #endregion
     }

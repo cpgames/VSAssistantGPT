@@ -6,7 +6,7 @@ from ToolBase import *
 
 class GetActiveDocumentText(ToolBase):
     name = "GetActiveDocumentText"
-    description = "Get all text in active document."
+    description = "Get text of active document."
     category = "Programming"
 
     def call(self, function, tool_callback):

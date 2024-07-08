@@ -41,21 +41,20 @@ namespace cpGames.VSA.ViewModel
             var response = await request.SendAsync();
             JArray data = response.data;
             await OutputWindowHelper.LogInfoAsync("Resources", $"{data.Count} files found in vector store");
-            List<FileViewModel> files = new();
-            ProjectUtils.ActiveProject.GetAllFiles(files);
             try
             {
-                var syncedFiles = files.Where(f => f.Status == FileViewModel.FileStatus.Synced).ToList();
+                var files = ProjectUtils.ActiveProject.GetAllFiles()
+                    .Where(f => f.Status == FileViewModel.FileStatus.Synced && !f.IsFolder).ToList();
                 var fileIdsToDelete = new List<string>();
                 foreach (var file in data)
                 {
-                    if (syncedFiles.All(x => x.Id != file["id"]!.ToString()))
+                    if (files.All(x => x.Id != file["id"]!.ToString()))
                     {
                         fileIdsToDelete.Add(file["id"]!.ToString());
                     }
                     else
                     {
-                        syncedFiles.RemoveAll(x => x.Id == file["id"]!.ToString());
+                        files.RemoveAll(x => x.Id == file["id"]!.ToString());
                     }
                 }
 
@@ -65,10 +64,10 @@ namespace cpGames.VSA.ViewModel
                     await deleteVectorStoreFileRequest.SendAsync();
                 }
 
-                if (syncedFiles.Count > 0)
+                if (files.Count > 0)
                 {
                     var createVectorStoreFileBatchRequest =
-                        new CreateVectorStoreFileBatchRequest(Id, syncedFiles.Select(f => f.Id).ToArray());
+                        new CreateVectorStoreFileBatchRequest(Id, files.Select(f => f.Id).ToArray());
                     await createVectorStoreFileBatchRequest.SendAsync();
                 }
             }

@@ -12,6 +12,7 @@ using Python.Runtime;
 namespace cpGames.VSA
 {
     public delegate Task<string> ToolCallback(string funcJson);
+
     public static class ToolAPI
     {
         #region Constructors
@@ -44,11 +45,13 @@ namespace cpGames.VSA
                 {
                     return false;
                 }
+
                 var pythonFile = new FileInfo(ProjectUtils.ActiveProject.PythonDll);
                 if (!pythonFile.Exists)
                 {
                     throw new Exception("Python dll not found.");
                 }
+
                 Runtime.PythonDLL = pythonFile.FullName;
                 PythonEngine.PythonHome = pythonFile.DirectoryName!;
 
@@ -62,6 +65,7 @@ namespace cpGames.VSA
             {
                 await OutputWindowHelper.LogErrorAsync(ex);
             }
+
             return false;
         }
 
@@ -96,12 +100,13 @@ namespace cpGames.VSA
             {
                 return GetResponseError("Tool name str not found in JSON object.");
             }
+
             var toolNameStr = toolName.ToString();
             var arguments = toolCall["arguments"];
 
-            var argumentsDict = (arguments != null && arguments.ToString() != "[]") ?
-                JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(arguments.ToString()) :
-                new Dictionary<string, dynamic>();
+            var argumentsDict = arguments != null && arguments.ToString() != "[]"
+                ? JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(arguments.ToString())
+                : new Dictionary<string, dynamic>();
             if (argumentsDict == null)
             {
                 return GetResponseError("Failed to parse arguments.");
@@ -137,6 +142,7 @@ namespace cpGames.VSA
             {
                 return GetResponseError("PythonEngine not initialized");
             }
+
             var toolCallJson = toolCall.ToString(Formatting.Indented);
             await OutputWindowHelper.LogInfoAsync("Tool Call", toolCallJson);
             var result = await Task.Run(
@@ -163,6 +169,7 @@ namespace cpGames.VSA
             {
                 return null;
             }
+
             using (Py.GIL())
             {
                 dynamic tools = Py.Import("AssistantTools");
@@ -246,25 +253,23 @@ namespace cpGames.VSA
             var selection = new JObject();
             if (!DTEUtils.IsSelectionEmpty())
             {
-                selection["relative_path"] = DTEUtils.GetActiveDocumentRelativePath();
+                selection["project_name"] = DTEUtils.GetActiveProject()!.Name;
+                selection["document_path"] = DTEUtils.GetActiveDocumentPath();
                 var selectionText = DTEUtils.GetSelection();
-                selection["text"] = selectionText;
-                selection["result"] = !string.IsNullOrEmpty(selectionText) ?
-                    "success" :
-                    "selection is empty";
+                selection["selection_text"] = selectionText;
+                selection["result"] = !string.IsNullOrEmpty(selectionText) ? "success" : "selection is empty";
             }
             else
             {
-                selection["path"] = "";
-                selection["text"] = "";
-                selection["result"] = "no active document";
+                selection["result"] = "selection is empty";
             }
+
             return selection;
         }
 
         public static JObject SetSelection(Dictionary<string, dynamic> arguments)
         {
-            DTEUtils.SetSelection(arguments["text"]);
+            DTEUtils.SetSelection(arguments["selection_text"]);
             DTEUtils.SaveDocument();
             return new JObject
             {
@@ -274,17 +279,27 @@ namespace cpGames.VSA
 
         public static JObject GetActiveDocumentText(Dictionary<string, dynamic> arguments)
         {
+            if (!DTEUtils.HasActiveDocument())
+            {
+                return new JObject
+                {
+                    ["result"] = "no active document"
+                };
+            }
+
             var text = DTEUtils.GetActiveDocumentText();
             return new JObject
             {
-                ["text"] = text,
+                ["project_name"] = DTEUtils.GetActiveProject()!.Name,
+                ["document_path"] = DTEUtils.GetActiveDocumentPath(),
+                ["document_text"] = text,
                 ["result"] = "success"
             };
         }
 
         public static JObject SetActiveDocumentText(Dictionary<string, dynamic> arguments)
         {
-            DTEUtils.SetActiveDocumentText(arguments["text"]);
+            DTEUtils.SetActiveDocumentText(arguments["document_text"]);
             DTEUtils.SaveDocument();
             return new JObject
             {
@@ -294,45 +309,58 @@ namespace cpGames.VSA
 
         public static JObject GetActiveDocumentPath(Dictionary<string, dynamic> arguments)
         {
-            var relativePath = DTEUtils.GetActiveDocumentRelativePath();
+            if (!DTEUtils.HasActiveDocument())
+            {
+                return new JObject
+                {
+                    ["result"] = "no active document"
+                };
+            }
+
+            var documentPath = DTEUtils.GetActiveDocumentPath();
             return new JObject
             {
-                ["relative_path"] = relativePath,
+                ["project_name"] = DTEUtils.GetActiveProject()!.Name,
+                ["document_path"] = documentPath,
                 ["result"] = "success"
             };
         }
 
         public static JObject GetDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var relativePath = arguments["relative_path"];
-            if (!DTEUtils.DocumentExists(relativePath))
+            var documentPath = arguments["document_path"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
-                    ["result"] = "file not found"
+                    ["result"] = "document not found"
                 };
             }
-            DTEUtils.OpenDocument(relativePath);
+
+            DTEUtils.OpenDocument(documentPath);
             var result = new JObject
             {
-                ["result"] = "success",
-                ["text"] = DTEUtils.GetActiveDocumentText()
+                ["project_name"] = DTEUtils.GetActiveProject()!.Name,
+                ["document_path"] = documentPath,
+                ["document_text"] = DTEUtils.GetActiveDocumentText(),
+                ["result"] = "success"
             };
             return result;
         }
 
         public static JObject SetDocumentText(Dictionary<string, dynamic> arguments)
         {
-            var relativePath = arguments["relative_path"];
-            if (!DTEUtils.DocumentExists(relativePath))
+            var documentPath = arguments["document_path"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
-                    ["result"] = "file not found"
+                    ["result"] = "document not found"
                 };
             }
-            DTEUtils.OpenDocument(relativePath);
-            DTEUtils.SetActiveDocumentText(arguments["text"]);
+
+            DTEUtils.OpenDocument(documentPath);
+            DTEUtils.SetActiveDocumentText(arguments["document_text"]);
             DTEUtils.SaveDocument();
             return new JObject
             {
@@ -342,15 +370,16 @@ namespace cpGames.VSA
 
         public static JObject OpenDocument(Dictionary<string, dynamic> arguments)
         {
-            string relativePath = arguments["relative_path"];
-            if (!DTEUtils.DocumentExists(relativePath))
+            string documentPath = arguments["document_path"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
-                    ["result"] = "file not found"
+                    ["result"] = "document not found"
                 };
             }
-            DTEUtils.OpenDocument(relativePath);
+
+            DTEUtils.OpenDocument(documentPath);
             return new JObject
             {
                 ["result"] = "success"
@@ -359,15 +388,16 @@ namespace cpGames.VSA
 
         public static JObject CloseDocument(Dictionary<string, dynamic> arguments)
         {
-            string relativePath = arguments["relative_path"];
-            if (!DTEUtils.DocumentExists(relativePath))
+            string documentPath = arguments["document_path"];
+            if (!DTEUtils.DocumentExists(documentPath))
             {
                 return new JObject
                 {
-                    ["result"] = "file not found"
+                    ["result"] = "document not found"
                 };
             }
-            DTEUtils.CloseDocument(relativePath);
+
+            DTEUtils.CloseDocument(documentPath);
             return new JObject
             {
                 ["result"] = "success"
@@ -376,14 +406,26 @@ namespace cpGames.VSA
 
         public static JObject CreateDocument(Dictionary<string, dynamic> arguments)
         {
-            string relativePath = arguments["relative_path"];
-            string text = arguments["text"];
-            DTEUtils.CreateDocument(relativePath);
+            string projectName = arguments["project_name"];
+            string documentPath = arguments["document_path"];
+            string text = arguments["document_text"];
+            try
+            {
+                DTEUtils.CreateDocument(projectName, documentPath);
+            }
+            catch (Exception e)
+            {
+                return new JObject
+                {
+                    ["result"] = e.Message
+                };
+            }
+
             SetDocumentText(
                 new Dictionary<string, dynamic>
                 {
-                    ["relative_path"] = relativePath,
-                    ["text"] = text
+                    ["document_path"] = documentPath,
+                    ["document_text"] = text
                 });
             DTEUtils.SaveDocument();
             return new JObject
@@ -394,8 +436,20 @@ namespace cpGames.VSA
 
         public static JObject DeleteDocument(Dictionary<string, dynamic> arguments)
         {
-            string relativePath = arguments["relative_path"];
-            DTEUtils.DeleteDocument(relativePath);
+            string projectName = arguments["project_name"];
+            string documentPath = arguments["document_path"];
+            try
+            {
+                DTEUtils.DeleteDocument(projectName, documentPath);
+            }
+            catch (Exception e)
+            {
+                return new JObject
+                {
+                    ["result"] = e.Message
+                };
+            }
+
             return new JObject
             {
                 ["result"] = "success"
@@ -404,10 +458,10 @@ namespace cpGames.VSA
 
         public static JObject HasDocument(Dictionary<string, dynamic> arguments)
         {
-            string relativePath = arguments["relative_path"];
+            string documentPath = arguments["document_path"];
             var result = new JObject
             {
-                ["result"] = DTEUtils.DocumentExists(relativePath)
+                ["result"] = DTEUtils.DocumentExists(documentPath)
             };
             return result;
         }
@@ -418,9 +472,16 @@ namespace cpGames.VSA
             var filesArr = new JArray();
             foreach (var file in files)
             {
-                var relativePath = DTEUtils.GetRelativePath(file.FileNames[0]);
-                filesArr.Add(relativePath);
+                var projectName = file.ContainingProject.Name;
+                var documentPath = file.FileNames[0];
+                var fileInfo = new JObject
+                {
+                    ["project_name"] = projectName,
+                    ["document_path"] = documentPath
+                };
+                filesArr.Add(fileInfo);
             }
+
             var result = new JObject
             {
                 ["result"] = "success",
@@ -434,9 +495,9 @@ namespace cpGames.VSA
             return DTEUtils.GetErrors();
         }
 
-        public static JObject GetProjectPath(Dictionary<string, dynamic> arguments)
+        public static JObject GetActiveProjectPath(Dictionary<string, dynamic> arguments)
         {
-            var projectPath = DTEUtils.GetProjectPath();
+            var projectPath = DTEUtils.GetActiveProjectPath();
             var result = new JObject
             {
                 ["result"] = "success",

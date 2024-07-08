@@ -185,11 +185,10 @@ namespace cpGames.VSA.ViewModel
                     if (!Path.StartsWith(tmpDir))
                     {
                         var content = File.ReadAllText(Path);
-                        var relativePath = DTEUtils.GetRelativePath(Path);
 
                         var fileObject = new JObject
                         {
-                            ["path"] = relativePath,
+                            ["document_path"] = Path,
                             ["data"] = content
                         };
 
@@ -211,15 +210,16 @@ namespace cpGames.VSA.ViewModel
 
                     // Delete the temporary file
                     File.Delete(tmpFilePath);
+
                     ProjectUtils.ActiveProject.Save();
+                    Status = FileStatus.Synced;
                 }
                 catch (Exception e)
                 {
                     await OutputWindowHelper.LogErrorAsync(e);
                     ProjectUtils.ActiveProject.Working = false;
+                    Status = FileStatus.NotSynced;
                 }
-
-                Status = FileStatus.Synced;
             }
             else if (IsFolder)
             {

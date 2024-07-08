@@ -34,7 +34,7 @@
                 ToolTip="Refresh thread" />
             <Border Grid.Column="1" CornerRadius="3" BorderThickness="1" BorderBrush="White">
                 <Grid>
-                    <TextBox Name="MessageText" TextWrapping="Wrap" KeyDown="MessageTextKeyDown"
+                    <TextBox Name="MessageText" TextWrapping="Wrap" PreviewKeyDown="MessageTextKeyDown" AcceptsReturn="True"
                              Style="{StaticResource TextBoxInputStyle}" />
                     <TextBlock Name="PlaceholderText" Text="Type your message..." IsHitTestVisible="False"
                                VerticalAlignment="Center" Margin="5,0,0,0"
@@ -46,7 +46,7 @@
                     Style="{StaticResource ImageButtonStyle}"
                     Tag="submit"
                     Click="SubmitClicked"
-                    ToolTip="Submit (Enter). Add new line (Shit+Enter)." />
+                    ToolTip="Submit (Shift+Enter)." />
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -63,7 +63,7 @@
         </Grid>
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
             <StackPanel>
-                <Label Content="thinking..." Visibility="{Binding IsThinking, UpdateSourceTrigger=PropertyChanged}" />
+                <Label Content="thinking..." Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <ItemsControl ItemsSource="{Binding Messages}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

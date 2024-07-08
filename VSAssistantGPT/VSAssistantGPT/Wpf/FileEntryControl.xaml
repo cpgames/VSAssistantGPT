@@ -12,7 +12,8 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid VerticalAlignment="Center">
+    <Grid VerticalAlignment="Center" 
+          ToolTip="{Binding Path=Path}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -22,7 +23,7 @@
         <Label Grid.Column="1" 
                Content="{Binding Path=Status, FallbackValue='Status', Converter={StaticResource FileStatusToTextConverter}}"
                Foreground="{Binding Path=Status, FallbackValue='Status', Converter={StaticResource FileStatusToColorConverter}}"
-               FontWeight="Bold" />
+               FontWeight="Bold"/>
         <Button Grid.Column="2"
                 Style="{StaticResource ImageButtonStyle}"
                 Tag="x"

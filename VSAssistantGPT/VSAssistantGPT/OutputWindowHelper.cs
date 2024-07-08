@@ -35,12 +35,33 @@ namespace cpGames.VSA
 
         private async Task WriteToOutputAsync(string message)
         {
+            var logsPath = Utils.GetOrCreateAppDir("Logs");
+            var logFile = System.IO.Path.Combine(logsPath, "vsLog.log");
+            if (!System.IO.File.Exists(logFile))
+            {
+                System.IO.File.Create(logFile).Close();
+            }
+            using (var sw = System.IO.File.AppendText(logFile))
+            {
+                await sw.WriteLineAsync(message);
+            }
+            
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             _customPane?.OutputStringThreadSafe(message + Environment.NewLine);
         }
 
         private void WriteToOutput(string message)
         {
+            var logsPath = Utils.GetOrCreateAppDir("Logs");
+            var logFile = System.IO.Path.Combine(logsPath, "vsLog.log");
+            if (!System.IO.File.Exists(logFile))
+            {
+                System.IO.File.Create(logFile).Close();
+            }
+            using (var sw = System.IO.File.AppendText(logFile))
+            {
+                sw.WriteLine(message);
+            }
             ThreadHelper.ThrowIfNotOnUIThread();
             _customPane?.OutputStringThreadSafe(message + Environment.NewLine);
         }

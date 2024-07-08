@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,7 +9,6 @@ using System.Windows.Forms;
 using System.Windows.Media;
 using cpGames.VSA.ViewModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
 using TabControl = System.Windows.Controls.TabControl;
@@ -172,6 +172,67 @@ namespace cpGames.VSA.Wpf
         {
             await ViewModel.ReloadToolsetAsync();
         }
+
+        private void LocateClicked(object sender, RoutedEventArgs e)
+        {
+            if (!DTEUtils.HasActiveDocument())
+            {
+                return;
+            }
+
+            var documentPath = DTEUtils.GetActiveDocumentPath();
+            SelectDocument(documentPath);
+        }
+
+
+        private void SearchFile_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(SearchFile.Text))
+            {
+                return;
+            }
+
+            var files = ViewModel.GetAllFiles();
+            var matchingFile = files.FirstOrDefault(file => file.Name.ToLower().Contains(SearchFile.Text.ToLower()));
+            if (matchingFile != null)
+            {
+                SelectDocument(matchingFile.Path);
+            }
+        }
+
+        private void SelectDocument(string documentPath)
+        {
+            var treePath = ViewModel.GetTreePath(documentPath);
+            var itemNames = treePath.Split(Path.DirectorySeparatorChar);
+            ItemsControl container = ResourceTreeView;
+            TreeViewItem? treeViewItem = null;
+            foreach (var itemName in itemNames)
+            {
+                for (var i = 0; i < container.Items.Count; i++)
+                {
+                    var item = (TreeViewItem)container.ItemContainerGenerator.ContainerFromIndex(i);
+                    if ((container.Items[i] as FileViewModel)?.Name == itemName)
+                    {
+                        treeViewItem = item;
+                        treeViewItem.IsExpanded = true;
+                        treeViewItem.UpdateLayout();
+                        container = treeViewItem;
+                        break;
+                    }
+                }
+            }
+
+            if (treeViewItem != null)
+            {
+                treeViewItem.IsSelected = true;
+                treeViewItem.BringIntoView();
+            }
+        }
+
+        private async void ReloadResourcesClicked(object sender, RoutedEventArgs e)
+        {
+            await ViewModel.LoadSolutionAsync();
+        }
         #endregion
 
         #region Testing
@@ -191,7 +252,7 @@ namespace cpGames.VSA.Wpf
         {
             var arguments = new Dictionary<string, dynamic>
             {
-                { "text", "some random text" }
+                { "selection_text", "some random text" }
             };
             var result = ToolAPI.SetSelection(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -207,7 +268,7 @@ namespace cpGames.VSA.Wpf
         {
             var arguments = new Dictionary<string, dynamic>
             {
-                { "text", "This is a test file" }
+                { "document_text", "This is a test file" }
             };
             var result = ToolAPI.SetActiveDocumentText(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -221,9 +282,11 @@ namespace cpGames.VSA.Wpf
 
         private void TestGetDocumentTextClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" }
+                { "document_path", documentPath }
             };
             var result = ToolAPI.GetDocumentText(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -231,10 +294,12 @@ namespace cpGames.VSA.Wpf
 
         private void TestSetDocumentTextClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" },
-                { "text", "This is a modified test file" }
+                { "document_path", documentPath },
+                { "document_text", "This is a modified test file" }
             };
             var result = ToolAPI.SetDocumentText(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -242,9 +307,11 @@ namespace cpGames.VSA.Wpf
 
         private void TestOpenDocumentClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" }
+                { "document_path", documentPath }
             };
             var result = ToolAPI.OpenDocument(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -252,9 +319,11 @@ namespace cpGames.VSA.Wpf
 
         private void TestCloseDocumentClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" }
+                { "document_path", documentPath }
             };
             var result = ToolAPI.CloseDocument(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -262,10 +331,14 @@ namespace cpGames.VSA.Wpf
 
         private void TestCreateDocumentClick(object sender, RoutedEventArgs e)
         {
+            var projectName = DTEUtils.GetActiveProjectName();
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" },
-                { "text", "This is a test file" }
+                { "project_name", projectName },
+                { "document_path", documentPath },
+                { "document_text", "This is a test file" }
             };
             var result = ToolAPI.CreateDocument(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -273,9 +346,11 @@ namespace cpGames.VSA.Wpf
 
         private void TestDeleteDocumentClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" }
+                { "document_path", documentPath }
             };
             var result = ToolAPI.DeleteDocument(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -283,9 +358,11 @@ namespace cpGames.VSA.Wpf
 
         private void TestHasDocumentClick(object sender, RoutedEventArgs e)
         {
+            var projectPath = DTEUtils.GetActiveProjectPath();
+            var documentPath = Path.Combine(projectPath, "TestFolder\\TestFile.cs");
             var arguments = new Dictionary<string, dynamic>
             {
-                { "filename", "TestFolder\\TestFile.cs" }
+                { "document_path", documentPath }
             };
             var result = ToolAPI.HasDocument(arguments);
             OutputWindowHelper.LogInfo("Testing", result.ToString());
@@ -305,7 +382,7 @@ namespace cpGames.VSA.Wpf
 
         private void TestGetProjectPathClick(object sender, RoutedEventArgs e)
         {
-            var result = ToolAPI.GetProjectPath(new Dictionary<string, dynamic>());
+            var result = ToolAPI.GetActiveProjectPath(new Dictionary<string, dynamic>());
             OutputWindowHelper.LogInfo("Testing", result.ToString());
         }
         #endregion

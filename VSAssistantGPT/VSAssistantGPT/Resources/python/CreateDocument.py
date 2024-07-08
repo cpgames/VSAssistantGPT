@@ -8,8 +8,9 @@ class CreateDocument(ToolBase):
     description = "Create a document with text."
     category = "Programming"
     arguments = [
-            Argument("relative_path", "string", "Relative path of the document."),
-            Argument("text", "string", "Text to write to the document."),
+            Argument("project_name", "string", "Name of the project to add document to."),
+            Argument("document_path", "string", "Absolute path of the document."),
+            Argument("document_text", "string", "Text to write to the document."),
         ]
     
     def call(self, function, tool_callback):

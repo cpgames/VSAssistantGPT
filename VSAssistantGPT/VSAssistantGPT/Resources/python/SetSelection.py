@@ -8,7 +8,7 @@ class SetSelection(ToolBase):
     description = "Overwrite selected text in active document."
     category = "Programming"
     arguments = [
-            Argument("text", "string", "Text to replace current selection with."),
+            Argument("selection_text", "string", "Text to replace current selection with."),
         ]
 
     def call(self, function, tool_callback):

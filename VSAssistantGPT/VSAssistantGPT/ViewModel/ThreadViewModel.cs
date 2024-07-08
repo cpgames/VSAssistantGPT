@@ -14,7 +14,7 @@ namespace cpGames.VSA.ViewModel
         private RunViewModel? _run;
         private AssistantViewModel? _assistant;
         private string _assistantName = "[None]";
-        private Visibility _isThinking = Visibility.Collapsed;
+        private bool _isRunning = false;
         #endregion
 
         #region Properties
@@ -72,14 +72,14 @@ namespace cpGames.VSA.ViewModel
             }
         }
 
-        public Visibility IsThinking
+        public bool IsRunning
         {
-            get => _isThinking;
+            get => _isRunning;
             set
             {
-                if (_isThinking != value)
+                if (_isRunning != value)
                 {
-                    _isThinking = value;
+                    _isRunning = value;
                     OnPropertyChanged();
                 }
             }
@@ -228,10 +228,10 @@ namespace cpGames.VSA.ViewModel
                 Assistant = Assistant,
                 Thread = this
             };
-            Run.RunStarted += () => IsThinking = Visibility.Visible;
+            Run.RunStarted += () => IsRunning = true;
             Run.RunEnded += () =>
             {
-                IsThinking = Visibility.Collapsed;
+                IsRunning = false;
                 Run = null;
             };
             await Run.CreateAsync();

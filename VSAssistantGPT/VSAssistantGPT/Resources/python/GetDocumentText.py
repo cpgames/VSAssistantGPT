@@ -6,10 +6,10 @@ from ToolBase import *
 
 class GetFileText(ToolBase):
     name = "GetDocumentText"
-    description = "Get all text in a document."
+    description = "Get document text."
     category = "Programming"
     arguments = [
-        Argument("relative_path", "string", "Relative path of the document."),
+        Argument("document_path", "string", "Absolute path of the document.")
     ]
 
     def call(self, function, tool_callback):
