@@ -18,11 +18,10 @@ Visual Studio extension utilizing OpenAI GPT assistants.
 ## Uploading Project Resources (optional)
 To better understand the project, VS assistant can use project's source files. They need to be uploaded manually.
 1. In VS Assistant, go to `Resources` tab.
-2. Expand the `Files` section. This shows all files uploaded for the project.
-3. If files are empty, click `refresh` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/bb10d042-b9b7-4160-be44-243e54bf88a6) button.
-4. Resource view mimics your physical file structure on disk (not in solution).
-5. You can sync individual files or entire folders by clicking `sync` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3c52cf71-4a87-483a-aeea-15985fb212bd) button to the right of the item.
-6. Once synced, file name will appear in greem. Synced files will automatically be updated on the server when changes are made. ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/517f74e5-ef65-4c93-a947-0cf30cdf5870)
+2. If resources are empty, click `refresh` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/bb10d042-b9b7-4160-be44-243e54bf88a6) button.
+3. Resource view mimics your physical file structure on disk (not in solution).
+4. You can sync individual files or entire folders by clicking `sync` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3c52cf71-4a87-483a-aeea-15985fb212bd) button to the right of the item.
+5. Once synced, file name will appear in greem. Synced files will automatically be updated on the server when changes are made. ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/517f74e5-ef65-4c93-a947-0cf30cdf5870)
 
 7. Synced folders automatically add/remove files to the server.
 8. While files are syncing it's not recommended to perform other operations in VSAssistant.
