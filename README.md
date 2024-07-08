@@ -19,14 +19,15 @@ Visual Studio extension utilizing OpenAI GPT assistants.
 To better understand the project, VS assistant can use project's source files. They need to be uploaded manually.
 1. In VS Assistant, go to `Resources` tab.
 2. Expand the `Files` section. This shows all files uploaded for the project.
-3. Click `sync` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3c52cf71-4a87-483a-aeea-15985fb212bd) button.
-4. Wait for file upload to finish.
-5. Expand `File Stores` section. This shows individual file sets used by assistant.
-6. Create new `File Store` by clicking the plus icon ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/4009d44d-9c8b-4e8b-83ca-53db14c7aa77).
-7. From `Files` section, select the files to add to `File Store`.
-8. Select files to add to the store (top checkbox selects all), and click `sync` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3c52cf71-4a87-483a-aeea-15985fb212bd) button in `File Store` section.
+3. If files are empty, click `refresh` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/bb10d042-b9b7-4160-be44-243e54bf88a6) button.
+4. Resource view mimics your physical file structure on disk (not in solution).
+5. You can sync individual files or entire folders by clicking `sync` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/3c52cf71-4a87-483a-aeea-15985fb212bd) button to the right of the item.
+6. Once synced, file name will appear in greem. Synced files will automatically be updated on the server when changes are made. ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/517f74e5-ef65-4c93-a947-0cf30cdf5870)
 
-Note: when making large changes to the project, it may make sense to reupload updated files.
+7. Synced folders automatically add/remove files to the server.
+8. While files are syncing it's not recommended to perform other operations in VSAssistant.
+9. To locate an active file, click `locate` ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/6324fe09-5281-459a-b2f5-55ecdec198d0) button
+10. You can also search by filename by using the textbox.
 
 ## Creating Assistant
 You can create as many assistants as you need to acompish different kinds of tasks.
@@ -35,8 +36,7 @@ You can create as many assistants as you need to acompish different kinds of tas
 3. Configure assistant as needed. For best results, I recommend `gpt-4o` model. It is more expensive than `gpt-3.5-turbo-0125`, but produces much better results. `gpt-3.5-turbo-0125` is also known for struggling with `file_search` tool.
 4. Assign a set of required tools to the assistant. E.g. if it needs to be able to read current text selection, add `GetSelection` tool, or if it needs to create new files, add `CreateDocument` tool, etc.
 5. You can see all tool information in [here](https://github.com/cpgames/VSAssistantGPT/tree/main/VSAssistantGPT/VSAssistantGPT/Resources/python).
-6. Assign `File Store` the assistant will use for file_search.
-7. Save assistant ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/6cd0f905-1602-46e3-bffc-3d3cc60e3f86).
+6. Save assistant ![image](https://github.com/cpgames/VSAssistantGPT/assets/49317353/6cd0f905-1602-46e3-bffc-3d3cc60e3f86).
 
 Note: Adding more tools will increase assistant's capabilities, but may also confuse it when selecting the right tool for the job. Feel free to experiment.
 
