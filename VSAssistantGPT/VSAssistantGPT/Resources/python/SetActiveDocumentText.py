@@ -9,7 +9,7 @@ class SetActiveDocumentText(ToolBase):
     description = "Set text in active document."
     category = "Programming"
     arguments = [
-        Argument("text", "string", "Text to replace contents of the document with."),
+        Argument("document_text", "string", "Text to replace contents of the document with."),
     ]
 
     def call(self, function, tool_callback):

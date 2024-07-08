@@ -134,53 +134,6 @@ namespace cpGames.VSA.Wpf
             }
             await ViewModel.SaveAsync();
         }
-
-        private async void SelectVectorStoreClicked(object sender, RoutedEventArgs e)
-        {
-            if (ViewModel == null)
-            {
-                return;
-            }
-            var resourceDictionary = new ResourceDictionary
-            {
-                Source = new Uri("/VSA;component/generic.xaml", UriKind.RelativeOrAbsolute)
-            };
-            var menuTemplate = resourceDictionary["SimpleMenuTemplate"] as ControlTemplate;
-            if (menuTemplate == null)
-            {
-                return;
-            }
-            var itemTemplate = resourceDictionary["SimpleMenuItemTemplate"] as ControlTemplate;
-            if (itemTemplate == null)
-            {
-                return;
-            }
-            if (ProjectUtils.ActiveProject.VectorStores.Count == 0)
-            {
-                await ProjectUtils.ActiveProject.LoadVectorStoresAsync();
-            }
-            var contextMenu = new ContextMenu
-            {
-                Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-                Template = menuTemplate
-            };
-            foreach (var vectorStore in ProjectUtils.ActiveProject.VectorStores)
-            {
-                var menuItem = new MenuItem
-                {
-                    Header = vectorStore.Id,
-                    Foreground = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
-                    Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
-                    Template = itemTemplate
-                };
-                menuItem.Click += (s, a) =>
-                {
-                    ViewModel.VectorStoreId = vectorStore.Id;
-                };
-                contextMenu.Items.Add(menuItem);
-            }
-            contextMenu.IsOpen = true;
-        }
         #endregion
 
         private async void SelectModelClicked(object sender, RoutedEventArgs e)

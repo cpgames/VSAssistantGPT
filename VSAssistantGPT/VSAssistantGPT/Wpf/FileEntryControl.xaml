@@ -1,10 +1,9 @@
 ﻿<UserControl x:Class="cpGames.VSA.Wpf.FileEntryControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:cpGames.VSA.Wpf"
-             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
              d:DesignHeight="50" d:DesignWidth="200">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -13,14 +12,27 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid VerticalAlignment="Center">
+    <Grid VerticalAlignment="Center" 
+          ToolTip="{Binding Path=Path}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <CheckBox Content="{Binding Path=Name, FallbackValue='FileName'}" 
-                  IsChecked="{Binding Selected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-        <Label Grid.Column="1" Content="Uploading..." Visibility="{Binding Path=UploadedVisibility, UpdateSourceTrigger=PropertyChanged}" 
-               FontWeight="Bold" />
+        <Label Content="{Binding Path=Name, FallbackValue='FileName'}" />
+        <Label Grid.Column="1" 
+               Content="{Binding Path=Status, FallbackValue='Status', Converter={StaticResource FileStatusToTextConverter}}"
+               Foreground="{Binding Path=Status, FallbackValue='Status', Converter={StaticResource FileStatusToColorConverter}}"
+               FontWeight="Bold"/>
+        <Button Grid.Column="2"
+                Style="{StaticResource ImageButtonStyle}"
+                Tag="x"
+                Visibility="{Binding Path=Status, Converter={StaticResource SyncedFileStatusToVisibilityConverter}}"
+                Click="DeleteClicked" />
+        <Button Grid.Column="2"
+                Style="{StaticResource ImageButtonStyle}"
+                Tag="sync"
+                Visibility="{Binding Path=Status, Converter={StaticResource NotSyncedFileStatusToVisibilityConverter}}"
+                Click="SyncClicked" />
     </Grid>
 </UserControl>

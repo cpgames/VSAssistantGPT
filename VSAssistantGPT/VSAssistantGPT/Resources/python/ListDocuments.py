@@ -6,7 +6,7 @@ from ToolBase import ToolBase
 
 class ListDocuments(ToolBase):
     name = "ListDocuments"
-    description = "List all documents (relative paths) in the project."
+    description = "List all documents in solution."
     category = "Programming"
 
     def call(self, function, tool_callback):

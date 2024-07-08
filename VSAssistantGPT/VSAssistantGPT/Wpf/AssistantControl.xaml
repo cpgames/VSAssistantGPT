@@ -24,7 +24,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Label Content="Name:" />
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="{Binding IsTemplate, Converter={StaticResource BoolToVisibilityInvConverter}}">
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            Visibility="{Binding IsTemplate, Converter={StaticResource BoolToVisibilityInvConverter}}">
                     <Button
                         Style="{StaticResource ImageButtonStyle}"
                         Tag="save"
@@ -82,19 +83,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <Grid Visibility="{Binding TemplateVisibility, UpdateSourceTrigger=PropertyChanged}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Label Grid.Column="0" Content="File Store:" Foreground="White" />
-                <Label Grid.Column="1" Content="{Binding VectorStoreId}" Foreground="White" />
-                <Button Grid.Column="2" Content="..." Foreground="White"
-                        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                        Click="SelectVectorStoreClicked" Height="20" />
-
-            </Grid>
         </StackPanel>
     </Border>
 </UserControl>

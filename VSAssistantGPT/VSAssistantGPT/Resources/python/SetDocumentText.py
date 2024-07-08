@@ -9,8 +9,8 @@ class SetDocumentText(ToolBase):
     description = "Set document text."
     category = "Programming"
     arguments = [
-        Argument("relative_path", "string", "Relative path of the document."),
-        Argument("text", "string", "Text to replace contents of the document with."),
+        Argument("document_path", "string", "Absolute path of the document."),
+        Argument("document_text", "string", "Text to write to the document."),
     ]
 
     def call(self, function, tool_callback):

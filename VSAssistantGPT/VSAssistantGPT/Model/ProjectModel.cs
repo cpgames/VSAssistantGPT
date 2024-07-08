@@ -1,4 +1,6 @@
-﻿namespace cpGames.VSA
+﻿using System.Collections.Generic;
+
+namespace cpGames.VSA
 {
     public class ProjectModel
     {
@@ -8,6 +10,7 @@
         public string pythonDll = "";
         public string selectedAssistant = "";
         public AssistantModel newAssistantTemplate = new();
+        public List<FileModel> fileCache = new();
         #endregion
     }
 }

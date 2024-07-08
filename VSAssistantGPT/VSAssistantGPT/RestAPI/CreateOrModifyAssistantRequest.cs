@@ -32,26 +32,23 @@ namespace cpGames.VSA.RestAPI
                 { "description", assistantModel.description }
             };
             var toolsArr = new JArray();
-            if (!string.IsNullOrEmpty(assistantModel.vectorStoreId))
+            JArray vectorStoresArr = new JArray
             {
-                JArray vectorStoresArr = new JArray
-                {
-                    assistantModel.vectorStoreId
-                };
-                var fileSearchObj = new JObject
-                {
-                    { "vector_store_ids", vectorStoresArr }
-                };
-                var toolResourcesObj = new JObject
-                {
-                    { "file_search", fileSearchObj }
-                };
-                assistantObject["tool_resources"] = toolResourcesObj;
-                toolsArr.Add(new JObject
-                {
-                    { "type", "file_search" }
-                });
-            }
+                ProjectUtils.ActiveProject.VectorStoreViewModel!.Id
+            };
+            var fileSearchObj = new JObject
+            {
+                { "vector_store_ids", vectorStoresArr }
+            };
+            var toolResourcesObj = new JObject
+            {
+                { "file_search", fileSearchObj }
+            };
+            assistantObject["tool_resources"] = toolResourcesObj;
+            toolsArr.Add(new JObject
+            {
+                { "type", "file_search" }
+            });
             foreach (var toolEntry in assistantModel.toolset)
             {
                 var tool = toolset.FirstOrDefault(t => t.Name == toolEntry.name);

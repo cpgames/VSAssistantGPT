@@ -8,7 +8,7 @@ using cpGames.VSA.ViewModel;
 namespace cpGames.VSA.Wpf
 {
     /// <summary>
-    /// Interaction logic for ThreadControl.xaml
+    ///     Interaction logic for ThreadControl.xaml
     /// </summary>
     public partial class ThreadControl : UserControl
     {
@@ -28,7 +28,7 @@ namespace cpGames.VSA.Wpf
         }
         #endregion
 
-        #region Events
+        #region Methods
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             UpdatePlaceholderVisibility();
@@ -37,12 +37,12 @@ namespace cpGames.VSA.Wpf
             MessageText.LostFocus += (s, e) => UpdatePlaceholderVisibility();
             MessageText.Focus();
         }
-        #endregion
 
-        #region Methods
         private void UpdatePlaceholderVisibility()
         {
-            PlaceholderText.Visibility = string.IsNullOrEmpty(MessageText.Text) && !MessageText.IsFocused ? Visibility.Visible : Visibility.Collapsed;
+            PlaceholderText.Visibility = string.IsNullOrEmpty(MessageText.Text) && !MessageText.IsFocused
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private async void SubmitClicked(object sender, RoutedEventArgs e)
@@ -52,6 +52,7 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
+
             var text = MessageText.Text;
             try
             {
@@ -74,17 +75,9 @@ namespace cpGames.VSA.Wpf
 
         private void MessageTextKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Shift)
             {
-                if (Keyboard.Modifiers == ModifierKeys.Shift)
-                {
-                    MessageText.Text += Environment.NewLine;
-                    MessageText.CaretIndex = MessageText.Text.Length;
-                }
-                else
-                {
-                    SubmitClicked(sender, e);
-                }
+                SubmitClicked(sender, e);
                 e.Handled = true;
             }
         }
@@ -95,6 +88,7 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
+
             var resourceDictionary = new ResourceDictionary
             {
                 Source = new Uri("/VSA;component/generic.xaml", UriKind.RelativeOrAbsolute)
@@ -104,15 +98,18 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
+
             var itemTemplate = resourceDictionary["SimpleMenuItemTemplate"] as ControlTemplate;
             if (itemTemplate == null)
             {
                 return;
             }
+
             if (ProjectUtils.ActiveProject.Assistants.Count == 0)
             {
                 await ProjectUtils.ActiveProject.LoadAssistantsAsync();
             }
+
             var contextMenu = new ContextMenu
             {
                 Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
@@ -127,12 +124,10 @@ namespace cpGames.VSA.Wpf
                     Background = new SolidColorBrush(Color.FromRgb(0, 0, 0)),
                     Template = itemTemplate
                 };
-                menuItem.Click +=  (s, a) =>
-                {
-                    ViewModel.Assistant = assistant;
-                };
+                menuItem.Click += (s, a) => { ViewModel.Assistant = assistant; };
                 contextMenu.Items.Add(menuItem);
             }
+
             contextMenu.IsOpen = true;
         }
 
@@ -142,10 +137,12 @@ namespace cpGames.VSA.Wpf
             {
                 return;
             }
+
             if (!string.IsNullOrEmpty(ViewModel.Id))
             {
                 await ViewModel.DeleteAsync();
             }
+
             await ViewModel.CreateAsync();
         }
         #endregion

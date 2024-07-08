@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace cpGames.VSA
 {
     [Export(typeof(IGlyphFactoryProvider))]
-    [Name("TodoGlyph")]
+    [Name("VSAGlyphProvider")]
     [Order(After = "VsTextMarker")]
     [ContentType("code")]
     [TagType(typeof(VSATag))]

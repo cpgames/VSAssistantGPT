@@ -1,12 +1,18 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:cpGames.VSA">
-    
+    xmlns:local="clr-namespace:cpGames.VSA"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
     <!-- Converters -->
     <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <local:BoolToVisibilityInvConverter x:Key="BoolToVisibilityInvConverter" />
     <local:BoolToInvBoolConverter x:Key="BoolToInvBoolConverter" />
+    <local:PathToFolderConverter x:Key="PathToFolderConverter" />
+    <local:FileStatusToTextConverter x:Key="FileStatusToTextConverter" />
+    <local:FileStatusToColorConverter x:Key="FileStatusToColorConverter" />
+    <local:SyncedFileStatusToVisibilityConverter x:Key="SyncedFileStatusToVisibilityConverter" />
+    <local:NotSyncedFileStatusToVisibilityConverter x:Key="NotSyncedFileStatusToVisibilityConverter" />
     <!-- Converters -->
 
     <!-- Flat ComboBox -->
@@ -150,11 +156,13 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="CaretBrush" Value="White" />
+
     </Style>
     <!-- End of Transparent TextBlock -->
 
     <!-- Input TextBox -->
     <Style x:Key="TextBoxInputStyle" TargetType="{x:Type TextBox}">
+
         <Setter Property="Background" Value="Black" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="CaretBrush" Value="White" />
@@ -176,6 +184,45 @@
     </Style>
     <!-- End of Default TextBox -->
 
+    <!-- WatermarkedTextBox TextBox -->
+    <Style x:Key="WatermarkedTextBox" TargetType="TextBox">
+        <Style.Resources>
+            <SolidColorBrush x:Key="WatermarkBrush" Color="Gray" />
+        </Style.Resources>
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="#FF2D2D30" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="MinHeight" Value="20" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <TextBox x:Name="textBox"
+                                 Text="{TemplateBinding Text}"
+                                 Background="{TemplateBinding Background}"
+                                 BorderBrush="{TemplateBinding BorderBrush}"
+                                 Foreground="{TemplateBinding Foreground}"
+                                 BorderThickness="{TemplateBinding BorderThickness}"
+                                 Padding="{TemplateBinding Padding}" />
+                        <TextBlock x:Name="watermark"
+                                   Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Tag}"
+                                   Foreground="Gray"
+                                   Margin="5,0,0,0"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False"
+                                   Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="" SourceName="textBox">
+                            <Setter TargetName="watermark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- End of WatermarkedTextBox TextBox -->
+
     <local:ImagePathConverter x:Key="ImagePathConverter" />
 
     <!-- Default Image Button -->
@@ -187,34 +234,37 @@
                         <!-- White Tint Border -->
                         <Border x:Name="whiteTint" Background="White" Opacity="1">
                             <Border.OpacityMask>
-                                <ImageBrush ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}"/>
+                                <ImageBrush
+                                    ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}" />
                             </Border.OpacityMask>
                         </Border>
                         <!-- Blue Tint Border (hidden by default) -->
                         <Border x:Name="blueTint" Background="#FFAAAAFF" Visibility="Hidden">
                             <Border.OpacityMask>
-                                <ImageBrush ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}"/>
+                                <ImageBrush
+                                    ImageSource="{Binding Path=Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ImagePathConverter}}" />
                             </Border.OpacityMask>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="True">
-                            <Setter TargetName="whiteTint" Property="Opacity" Value="1"/>
+                            <Setter TargetName="whiteTint" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="whiteTint" Property="Opacity" Value="0.5"/>
+                            <Setter TargetName="whiteTint" Property="Opacity" Value="0.5" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="blueTint" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="blueTint" Property="Visibility" Value="Visible" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="False">
-                            <Setter TargetName="blueTint" Property="Visibility" Value="Hidden"/>
+                            <Setter TargetName="blueTint" Property="Visibility" Value="Hidden" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="IsEnabled" Value="{Binding Source={x:Static local:ProjectUtils.ActiveProject}, Path=Working, Converter={StaticResource BoolToInvBoolConverter}}"/>
+        <Setter Property="IsEnabled"
+                Value="{Binding Source={x:Static local:ProjectUtils.ActiveProject}, Path=Working, Converter={StaticResource BoolToInvBoolConverter}}" />
     </Style>
     <!-- Default Image Button -->
 

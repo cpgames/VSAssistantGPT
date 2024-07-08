@@ -8,7 +8,8 @@ class DeleteDocument(ToolBase):
     description = "Delete a document."
     category = "Programming"
     arguments = [
-            Argument("relative_path", "string", "Relative path of the document."),
+            Argument("project_name", "string", "Name of the project to delete document from."),
+            Argument("document_path", "string", "Absolute path of the document.")
         ]
     
     def call(self, function, tool_callback):

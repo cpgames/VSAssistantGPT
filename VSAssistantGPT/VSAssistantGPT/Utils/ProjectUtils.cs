@@ -57,6 +57,7 @@ namespace cpGames.VSA
                 }
             }
             var projectViewModel = new ProjectViewModel(project);
+            projectViewModel.Load();
             if (shouldSave)
             {
                 SaveProject();

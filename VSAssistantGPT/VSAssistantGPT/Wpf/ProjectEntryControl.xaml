@@ -19,7 +19,7 @@
             </CollectionViewSource>
         </ResourceDictionary>
     </UserControl.Resources>
-    <TabControl 
+    <TabControl
         Name="TabControl"
         SelectionChanged="TabSelected">
         <TabItem Header="Chat" Height="20" VerticalAlignment="Bottom">
@@ -101,75 +101,63 @@
             </Grid>
         </TabItem>
         <TabItem Header="Resources">
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <Expander Header="Files" IsExpanded="False" Expanded="FilesExpanded">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="101*" />
-                                    <ColumnDefinition Width="20*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="101*" />
-                                </Grid.ColumnDefinitions>
-                                <CheckBox Grid.Column="0" Name="SelectAllCheckbox" Margin="5,0,5,0"
-                                          Checked="SelectAllFilesChecked" Unchecked="SelectAllFilesUnchecked" />
-                                <Button Grid.Column="2"
-                                        Style="{StaticResource ImageButtonStyle}"
-                                        Tag="refresh"
-                                        Click="LoadFilesClicked" />
-                                <Button Grid.Column="3"
-                                        Style="{StaticResource ImageButtonStyle}"
-                                        Tag="sync"
-                                        Click="SyncFilesClicked" />
-                                <Button Grid.Column="4" Style="{StaticResource ImageButtonStyle}"
-                                        Tag="delete"
-                                        Click="DeleteFilesClicked" />
-                            </Grid>
-                            <StackPanel>
-                                <ItemsControl ItemsSource="{Binding Files, UpdateSourceTrigger=PropertyChanged}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type viewModel:FileViewModel}">
-                                            <wpf:FileEntryControl />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </StackPanel>
-                    </Expander>
-                    <Expander Header="File Stores" IsExpanded="False" Expanded="VectorStoresExpanded">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Button Grid.Column="1"
-                                        Style="{StaticResource ImageButtonStyle}"
-                                        Tag="refresh"
-                                        Click="LoadVectorStoresClicked" />
-                                <Button Grid.Column="2"
-                                        Style="{StaticResource ImageButtonStyle}"
-                                        Tag="plus"
-                                        Click="AddVectorStoreClicked" />
-                            </Grid>
-                            <StackPanel>
-                                <ItemsControl ItemsSource="{Binding VectorStores, UpdateSourceTrigger=PropertyChanged}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type viewModel:VectorStoreViewModel}">
-                                            <wpf:VectorStoreControl />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </StackPanel>
-                    </Expander>
-                </StackPanel>
-            </ScrollViewer>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="pin"
+                            Click="LocateClicked"
+                            ToolTip="Select active document" />
+                    <TextBox Grid.Column="1"
+                             Name="SearchFile"
+                             Style="{StaticResource WatermarkedTextBox}"
+                             Tag="Search files..."
+                             TextChanged="SearchFile_OnTextChanged" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource ImageButtonStyle}"
+                            Tag="refresh"
+                            Click="ReloadResourcesClicked"
+                            ToolTip="Reload solution" />
+                </Grid>
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <TreeView Name="ResourceTreeView"
+                              ItemsSource="{Binding Files}"
+                              Background="Transparent"
+                              BorderBrush="Transparent">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type viewModel:FileViewModel}"
+                                                      ItemsSource="{Binding Children}">
+                                <wpf:FileEntryControl>
+                                    <wpf:FileEntryControl.DataContext>
+                                        <Binding Path="." />
+                                    </wpf:FileEntryControl.DataContext>
+                                </wpf:FileEntryControl>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                        <TreeView.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                             Color="#25FFFFFF" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                             Color="Black" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                                             Color="#25FFFFFF" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+                                             Color="Black" />
+                        </TreeView.Resources>
+                    </TreeView>
+                </ScrollViewer>
+            </Grid>
         </TabItem>
         <TabItem Header="Settings">
             <StackPanel>
@@ -183,7 +171,7 @@
                             Style="{StaticResource ImageButtonStyle}"
                             Tag="save"
                             Click="SaveProjectClicked"
-                            Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            Visibility="{Binding Modified, Converter={StaticResource BoolToVisibilityConverter}}" />
                 </Grid>
                 <Label Content="API Key:" />
                 <TextBox
@@ -195,7 +183,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBox
-                    Text="{Binding PythonDll, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='C:\\Python\\python39.dll'}" />
+                        Text="{Binding PythonDll, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue='C:\\Python\\python39.dll'}" />
                     <Button Grid.Column="1" Content="..." Foreground="White"
                             Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
                             Click="PythonSelectClicked" Height="20" />

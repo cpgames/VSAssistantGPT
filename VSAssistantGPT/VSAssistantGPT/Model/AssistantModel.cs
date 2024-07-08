@@ -11,7 +11,6 @@ namespace cpGames.VSA
         public string description = "";
         public string instructions = "";
         public List<ToolEntryModel> toolset = new();
-        public string vectorStoreId = "";
         #endregion
     }
 }

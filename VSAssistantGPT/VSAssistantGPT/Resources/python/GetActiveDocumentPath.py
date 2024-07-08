@@ -6,7 +6,7 @@ from ToolBase import *
 
 class GetActiveDocumentPath(ToolBase):
     name = "GetActiveDocumentPath"
-    description = "Get relative path of active document."
+    description = "Get absolute path of active document."
     category = "Programming"
 
     def call(self, function, tool_callback):
